@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<title>Analytics — Encurtador de URL</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; color: #1f2937; }
+  h1 { font-size: 1.4rem; }
+  .cards { display: flex; gap: 16px; margin: 24px 0; flex-wrap: wrap; }
+  .card { background: #f3f4f6; border-radius: 10px; padding: 16px 20px; min-width: 160px; }
+  .card .valor { font-size: 1.8rem; font-weight: 700; color: #2563eb; }
+  .card .rotulo { font-size: 0.85rem; color: #6b7280; }
+  section { margin: 32px 0; }
+  .barra-linha { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+  .barra-rotulo { width: 160px; font-size: 0.85rem; text-align: right; flex-shrink: 0; }
+  .barra-fundo { flex-grow: 1; background: #e5e7eb; border-radius: 4px; overflow: hidden; height: 18px; }
+  .barra-preenchida { background: #2563eb; height: 100%; border-radius: 4px; }
+  .barra-valor { width: 40px; font-size: 0.85rem; color: #374151; }
+  #erro { color: #dc2626; }
+  a.url-original { word-break: break-all; }
+</style>
+</head>
+<body>
+  <h1 id="titulo">Carregando analytics…</h1>
+  <p id="url-original"></p>
+  <div id="erro"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>Cliques por dia</h2>
+    <div id="grafico-dias"></div>
+  </section>
+
+  <section>
+    <h2>Navegadores</h2>
+    <div id="grafico-navegadores"></div>
+  </section>
+
+  <section>
+    <h2>Sistemas operacionais</h2>
+    <div id="grafico-sistemas"></div>
+  </section>
+
+  <section>
+    <h2>Principais origens (referrer)</h2>
+    <div id="grafico-referrers"></div>
+  </section>
+
+<script>
+function renderizarBarras(container, dados, chaveRotulo, chaveValor) {
+  container.innerHTML = "";
+  if (!dados.length) {
+    container.innerHTML = "<p style='color:#6b7280'>Sem dados ainda.</p>";
+    return;
+  }
+  const max = Math.max(...dados.map(d => d[chaveValor]));
+  for (const item of dados) {
+    const linha = document.createElement("div");
+    linha.className = "barra-linha";
+
+    const rotulo = document.createElement("div");
+    rotulo.className = "barra-rotulo";
+    rotulo.textContent = item[chaveRotulo];
+
+    const fundo = document.createElement("div");
+    fundo.className = "barra-fundo";
+    const preenchida = document.createElement("div");
+    preenchida.className = "barra-preenchida";
+    const pct = max > 0 ? (item[chaveValor] / max) * 100 : 0;
+    preenchida.style.width = pct + "%";
+    fundo.appendChild(preenchida);
+
+    const valor = document.createElement("div");
+    valor.className = "barra-valor";
+    valor.textContent = item[chaveValor];
+
+    linha.appendChild(rotulo);
+    linha.appendChild(fundo);
+    linha.appendChild(valor);
+    container.appendChild(linha);
+  }
+}
+
+async function carregar() {
+  const codigo = window.location.pathname.split("/").filter(Boolean).pop();
+  try {
+    const resp = await fetch(`/api/analytics/${codigo}`);
+    if (!resp.ok) {
+      document.getElementById("erro").textContent = "Código não encontrado.";
+      document.getElementById("titulo").textContent = "Analytics";
+      return;
+    }
+    const dados = await resp.json();
+
+    document.getElementById("titulo").textContent = `Analytics de /${dados.codigo}`;
+    const linkOriginal = document.getElementById("url-original");
+    linkOriginal.innerHTML = `Aponta para: <a class="url-original" href="${dados.url_original}" target="_blank">${dados.url_original}</a>`;
+
+    const cards = document.getElementById("cards");
+    cards.innerHTML = `
+      <div class="card"><div class="valor">${dados.total_cliques}</div><div class="rotulo">Cliques totais</div></div>
+      <div class="card"><div class="valor">${dados.visitantes_unicos_aprox}</div><div class="rotulo">Visitantes únicos (aprox.)</div></div>
+    `;
+
+    renderizarBarras(document.getElementById("grafico-dias"), dados.cliques_por_dia, "dia", "cliques");
+    renderizarBarras(document.getElementById("grafico-navegadores"), dados.navegadores, "navegador", "cliques");
+    renderizarBarras(document.getElementById("grafico-sistemas"), dados.sistemas_operacionais, "sistema_operacional", "cliques");
+    renderizarBarras(document.getElementById("grafico-referrers"), dados.top_referrers, "referrer", "cliques");
+  } catch (e) {
+    document.getElementById("erro").textContent = "Erro ao carregar analytics: " + e;
+  }
+}
+
+carregar();
+</script>
+</body>
+</html>

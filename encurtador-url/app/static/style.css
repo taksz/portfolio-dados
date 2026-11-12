@@ -31,6 +31,20 @@
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #0c1420;
+  --surface: #131d2c;
+  --ink: #eef2f7;
+  --ink-soft: #9fb0c6;
+  --line: #243247;
+  --accent: #3cc4bf;
+  --accent-ink: #06201f;
+  --accent-soft: #123a3a;
+  --peak: #f0b455;
+  --track: #1d2a3d;
+  --danger: #ff8a7a;
+}
+
 * { box-sizing: border-box; }
 
 html { background: var(--bg); }
@@ -73,7 +87,20 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .marca b { color: var(--accent); font-weight: 500; }
 .topo nav { display: flex; gap: 20px; font-size: 0.95rem; }
+.topo nav { align-items: center; }
 .topo nav a { color: var(--ink-soft); }
+.tema {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.tema:hover { color: var(--ink); border-color: var(--ink-soft); }
 
 /* Botões e campos */
 .btn {
@@ -150,6 +177,26 @@ a:hover { text-decoration-thickness: 2px; }
   margin: 0 0 16px;
 }
 .acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Ao encurtar: o link longo encolhe e o código curto aparece no lugar dele */
+.resultado .longa {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 0;
+  opacity: 0;
+}
+.resultado.animar .longa { animation: encolher 1s cubic-bezier(0.6, 0, 0.2, 1) both; }
+.resultado.animar .curta { animation: surgir 0.5s 0.7s ease-out both; }
+@keyframes encolher {
+  0%   { max-height: 2em; max-width: 100%; opacity: 1; }
+  70%  { max-height: 2em; max-width: 12ch; opacity: 0.7; }
+  100% { max-height: 0; max-width: 0; opacity: 0; }
+}
+@keyframes surgir { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .lista-titulo { display: flex; align-items: baseline; justify-content: space-between; margin: 44px 0 12px; }
 .lista-titulo h2 { font-size: 1.35rem; letter-spacing: -0.02em; margin: 0; }
@@ -253,6 +300,7 @@ a:hover { text-decoration-thickness: 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .coluna .barra, .item .preench { animation: none; }
+  .coluna .barra, .item .preench, .resultado.animar .longa, .resultado.animar .curta { animation: none; }
+  .resultado.animar .longa { display: none; }
   .btn, .toast { transition: none; }
 }

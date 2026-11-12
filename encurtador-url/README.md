@@ -15,7 +15,8 @@ API em Python (FastAPI) que encurta URLs e registra **analytics de cada clique**
 - **Redirecionamento** — `GET /{codigo}` redireciona (302) para a URL original e registra o clique.
 - **Analytics por link**: total de cliques, visitantes únicos aproximados, cliques por dia, navegador, sistema operacional e top referrers.
 - **Página inicial** (`/`) — cola a URL, copia o link curto e vê a lista de todos os links com o total de cliques.
-- **Painel de cliques** (`/dashboard/{codigo}`) — gráfico de cliques por dia e rankings de navegadores, sistemas e origens, com tema claro/escuro automático e atualização a cada 5 segundos. JavaScript puro, sem biblioteca de gráficos.
+- **Painel de cliques** (`/dashboard/{codigo}`) — gráfico de cliques por dia e rankings de navegadores, sistemas e origens, com atualização a cada 5 segundos. JavaScript puro, sem biblioteca de gráficos.
+- **Tema claro, escuro ou automático**: o botão no topo alterna e o navegador lembra a escolha (também aceita `?tema=claro` ou `?tema=escuro` na URL).
 - **Privacidade por padrão**: o IP do visitante nunca é armazenado em texto puro — só o hash SHA-256 dele, usado apenas para estimar visitantes únicos.
 
 ## Estrutura
@@ -32,7 +33,7 @@ encurtador-url/
 │       ├── index.html    # Página inicial (encurtar + lista de links)
 │       ├── dashboard.html  # Painel de cliques de um link
 │       ├── style.css     # Estilos compartilhados (claro/escuro)
-│       └── app.js        # Funções compartilhadas das páginas
+│       └── app.js        # Tema, copiar link e funções compartilhadas
 ├── imgs/                 # Capturas de tela da interface
 ├── tests/                # 43 testes pytest
 └── requirements.txt
@@ -90,7 +91,11 @@ Depois de subir o servidor, abra `http://127.0.0.1:8000/` no navegador. Dá para
 
 ![Página inicial do encurtador](imgs/pagina-inicial.png)
 
-![Painel de cliques de um link](imgs/painel.png)
+![Painel de cliques de um link, tema claro](imgs/painel.png)
+
+![Painel de cliques de um link, tema escuro](imgs/painel-escuro.png)
+
+Ao encurtar um link, a interface mostra o endereço longo encolhendo até virar o código curto.
 
 **Os cliques das capturas são simulados.** Um projeto recém-clonado não tem cliques, então o comando abaixo cria 3 links (`demo-docs`, `demo-portfolio` e `demo-dados`) com 14 dias de cliques pseudoaleatórios (semente fixa). Os dados não são reais:
 

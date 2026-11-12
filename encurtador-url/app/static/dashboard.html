@@ -110,7 +110,8 @@ async function carregar() {
   }
 }
 
-document.getElementById("copiar").addEventListener("click", () => copiar(urlCurta));
+const botaoCopiar = document.getElementById("copiar");
+botaoCopiar.addEventListener("click", () => copiar(urlCurta, botaoCopiar));
 carregar();
 setInterval(carregar, 5000);
 </script>

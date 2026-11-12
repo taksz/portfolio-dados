@@ -32,6 +32,7 @@
       <p class="erro" id="erro" role="alert"></p>
 
       <div class="resultado" id="resultado" hidden>
+        <p class="longa" id="longa"></p>
         <p class="rotulo">Seu link curto</p>
         <p class="curta" id="curta"></p>
         <div class="acoes">
@@ -104,7 +105,12 @@ form.addEventListener("submit", async (ev) => {
     document.getElementById("curta").textContent = dados.url_curta;
     document.getElementById("abrir").href = dados.url_curta;
     document.getElementById("painel").href = `/dashboard/${dados.codigo}`;
-    document.getElementById("resultado").hidden = false;
+    document.getElementById("longa").textContent = url;
+    const caixa = document.getElementById("resultado");
+    caixa.hidden = false;
+    caixa.classList.remove("animar");
+    void caixa.offsetWidth; // reinicia a animação a cada novo link
+    caixa.classList.add("animar");
     campo.value = "";
     await carregarLinks();
   } catch (_) {
@@ -114,7 +120,8 @@ form.addEventListener("submit", async (ev) => {
   }
 });
 
-document.getElementById("copiar").addEventListener("click", () => copiar(ultimaCurta));
+const botaoCopiar = document.getElementById("copiar");
+botaoCopiar.addEventListener("click", () => copiar(ultimaCurta, botaoCopiar));
 carregarLinks();
 </script>
 </body>

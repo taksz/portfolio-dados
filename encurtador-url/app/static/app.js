@@ -12,6 +12,42 @@ function el(tag, props = {}, ...filhos) {
   return e;
 }
 
+// Tema: automático (segue o sistema), claro ou escuro. A escolha fica salva no navegador.
+// Também aceita ?tema=claro ou ?tema=escuro na URL.
+const TEMAS = [
+  { chave: "auto", rotulo: "Tema automático" },
+  { chave: "light", rotulo: "Tema claro" },
+  { chave: "dark", rotulo: "Tema escuro" },
+];
+
+function temaSalvo() {
+  const param = new URLSearchParams(location.search).get("tema");
+  if (param === "claro") return "light";
+  if (param === "escuro") return "dark";
+  try { return localStorage.getItem("tema") || "auto"; } catch (_) { return "auto"; }
+}
+
+function aplicarTema(chave) {
+  if (chave === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", chave);
+  const botao = document.getElementById("tema");
+  if (botao) botao.textContent = TEMAS.find((t) => t.chave === chave).rotulo;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const nav = document.querySelector(".topo nav");
+  if (!nav) return;
+  let atual = temaSalvo();
+  const botao = el("button", { id: "tema", class: "tema", type: "button", "aria-label": "Alternar tema" });
+  nav.append(botao);
+  aplicarTema(atual);
+  botao.addEventListener("click", () => {
+    atual = TEMAS[(TEMAS.findIndex((t) => t.chave === atual) + 1) % TEMAS.length].chave;
+    try { localStorage.setItem("tema", atual); } catch (_) { /* sem armazenamento: vale só nesta visita */ }
+    aplicarTema(atual);
+  });
+});
+
 let toastTimer;
 function avisar(mensagem) {
   let t = document.getElementById("toast");
@@ -25,10 +61,17 @@ function avisar(mensagem) {
   toastTimer = setTimeout(() => t.classList.remove("visivel"), 1800);
 }
 
-async function copiar(texto) {
+// Copia o texto e confirma no próprio botão ("Copiar link" vira "Link copiado" por 1,8 s).
+async function copiar(texto, botao) {
   try {
     await navigator.clipboard.writeText(texto);
     avisar("Link copiado");
+    if (botao) {
+      const original = botao.dataset.rotulo || botao.textContent;
+      botao.dataset.rotulo = original;
+      botao.textContent = "Link copiado";
+      setTimeout(() => { botao.textContent = original; }, 1800);
+    }
   } catch (_) {
     avisar("Não foi possível copiar. Selecione o link e copie manualmente.");
   }

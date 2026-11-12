@@ -95,7 +95,9 @@ Depois de subir o servidor, abra `http://127.0.0.1:8000/` no navegador. Dá para
 
 ![Painel de cliques de um link, tema escuro](imgs/painel-escuro.png)
 
-Ao encurtar um link, a interface mostra o endereço longo encolhendo até virar o código curto.
+Ao encurtar um link, a interface mostra o endereço longo encolhendo até virar o código curto:
+
+![Animação: o endereço longo encolhe e vira o link curto](imgs/animacao-encurtar.gif)
 
 **Os cliques das capturas são simulados.** Um projeto recém-clonado não tem cliques, então o comando abaixo cria 3 links (`demo-docs`, `demo-portfolio` e `demo-dados`) com 14 dias de cliques pseudoaleatórios (semente fixa). Os dados não são reais:
 

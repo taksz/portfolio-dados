@@ -1,0 +1,84 @@
+/// Script TMDL: relacionamentos e medidas do modelo estrela de vendas.
+///
+/// Como usar, no Power BI Desktop (com as 5 tabelas já importadas via importar_dados.m):
+///   1. Abra a visão "TMDL" (menu à esquerda do Desktop, ícone de código).
+///   2. Cole TODO este script no editor e clique em "Aplicar".
+///   3. Selecione a tabela dim_calendario e use Ferramentas de tabela > Marcar como tabela de
+///      datas (coluna "data"). Esse passo fica fora do script de propósito: recriar a tabela
+///      por script apagaria as colunas importadas.
+///   4. Em dim_calendario, selecione a coluna "mes_nome" > Classificar por coluna > "mes_num".
+///
+/// Aviso: o script segue a sintaxe TMDL documentada, mas não foi executado dentro do Power BI
+/// Desktop pelo autor. Se der erro, o editor aponta a linha; os relacionamentos também podem
+/// ser criados arrastando as colunas na visão de Modelo (veja ROTEIRO.md), e as medidas podem
+/// ser coladas uma a uma a partir de medidas.dax.
+createOrReplace
+
+	relationship rel_fato_calendario
+		fromColumn: fato_vendas.data
+		toColumn: dim_calendario.data
+
+	relationship rel_fato_produto
+		fromColumn: fato_vendas.id_produto
+		toColumn: dim_produto.id_produto
+
+	relationship rel_fato_regiao
+		fromColumn: fato_vendas.id_regiao
+		toColumn: dim_regiao.id_regiao
+
+	relationship rel_fato_canal
+		fromColumn: fato_vendas.id_canal
+		toColumn: dim_canal.id_canal
+
+	table Medidas
+
+		partition Medidas = calculated
+			mode: import
+			source = ROW ( "Medidas", 1 )
+
+		column Medidas
+			isHidden
+			sourceColumn: [Medidas]
+
+		measure 'Receita Total' = SUM ( fato_vendas[receita] )
+			formatString: "R$ #,0.00"
+
+		measure Vendas = COUNTROWS ( fato_vendas )
+			formatString: #,0
+
+		measure 'Unidades Vendidas' = SUM ( fato_vendas[quantidade] )
+			formatString: #,0
+
+		measure 'Ticket Médio' = DIVIDE ( [Receita Total], [Vendas] )
+			formatString: "R$ #,0.00"
+
+		measure 'Receita Ano Anterior' = CALCULATE ( [Receita Total], SAMEPERIODLASTYEAR ( dim_calendario[data] ) )
+			formatString: "R$ #,0.00"
+
+		measure 'Crescimento YoY %' = DIVIDE ( [Receita Total] - [Receita Ano Anterior], [Receita Ano Anterior] )
+			formatString: 0.0%
+
+		measure 'Receita Acumulada no Ano' = TOTALYTD ( [Receita Total], dim_calendario[data] )
+			formatString: "R$ #,0.00"
+
+		measure 'Participação na Receita %' = DIVIDE ( [Receita Total], CALCULATE ( [Receita Total], ALLSELECTED () ) )
+			formatString: 0.0%
+
+		measure 'Receita Online %' = DIVIDE ( CALCULATE ( [Receita Total], dim_canal[canal] = "Online" ), [Receita Total] )
+			formatString: 0.0%
+
+		measure 'Receita Alta Temporada' = CALCULATE ( [Receita Total], dim_calendario[alta_temporada] = "Sim" )
+			formatString: "R$ #,0.00"
+
+		measure 'Receita Média Mensal' = DIVIDE ( [Receita Total], DISTINCTCOUNT ( dim_calendario[ano_mes] ) )
+			formatString: "R$ #,0.00"
+
+		measure 'Efeito Alta Temporada' = ```
+				VAR MediaAlta =
+				    CALCULATE ( [Receita Média Mensal], dim_calendario[alta_temporada] = "Sim" )
+				VAR MediaResto =
+				    CALCULATE ( [Receita Média Mensal], dim_calendario[alta_temporada] = "Não" )
+				RETURN
+				    DIVIDE ( MediaAlta, MediaResto )
+				```
+			formatString: 0.00"x"

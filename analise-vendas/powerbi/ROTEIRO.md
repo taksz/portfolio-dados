@@ -23,6 +23,17 @@ Tabelas geradas em `data/powerbi/`:
 | `dim_regiao.csv` | `id_regiao`, `regiao` |
 | `dim_canal.csv` | `id_canal`, `canal` |
 
+## Caminho rápido: scripts prontos
+
+Se preferir colar scripts em vez de seguir os passos 2 a 4 na mão:
+
+1. **Importação:** no Power BI Desktop, abra o Power Query (**Página Inicial > Transformar dados**) e crie as consultas de [`importar_dados.m`](importar_dados.m): três parâmetros (`Pasta`, `Separador`, `Cultura`) e uma consulta para cada tabela. Troque o valor de `Pasta` pelo caminho da sua pasta `data\powerbi` (para arquivos `--formato us`, use `,` e `en-US`). Depois, **Fechar e aplicar**.
+2. **Relacionamentos e medidas:** abra a visão **TMDL** do Desktop, cole todo o [`modelo.tmdl`](modelo.tmdl) e aplique. Ele cria os 4 relacionamentos e as 12 medidas (as mesmas de `medidas.dax`) numa tabela `Medidas`.
+3. **Dois ajustes manuais** (o script não faz de propósito): marcar `dim_calendario` como **tabela de datas** e classificar `mes_nome` por `mes_num`.
+4. Siga para o passo 5 (páginas) e o passo 6 (conferência dos números).
+
+Os scripts seguem a sintaxe documentada do Power Query e do TMDL, mas **não foram executados no Power BI Desktop** pelo autor. O que foi verificado automaticamente (`tests/test_powerbi_scripts.py`): os nomes de tabelas e colunas dos scripts batem com o que o `exportar_powerbi.py` exporta, os relacionamentos ligam colunas existentes e com chave única no lado "um", e as 12 medidas do TMDL são as mesmas do `medidas.dax`. Se algo der erro no Desktop, os passos 2 a 4 acima fazem o mesmo manualmente.
+
 ## 2. Importar no Power BI Desktop
 
 1. **Obter dados > Texto/CSV** e importe os 5 arquivos (pode selecionar a pasta inteira em **Obter dados > Pasta**).

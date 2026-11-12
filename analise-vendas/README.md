@@ -40,7 +40,7 @@ python src/analise.py           # roda a análise e regrava os gráficos em imgs
 python src/analise_ibge.py      # baixa dados reais do IBGE e compara a sazonalidade
 python src/exportar_powerbi.py  # gera os CSVs do modelo estrela para o Power BI
 
-pytest tests/ -v                # 38 testes (sem internet)
+pytest tests/ -v                # 46 testes (sem internet)
 ```
 
 As consultas de `sql/consultas.sql` podem ser rodadas com qualquer cliente SQLite sobre `data/vendas.db`.
@@ -103,9 +103,10 @@ O dashboard interativo se monta no Power BI Desktop, que não roda em linha de c
 
 - `src/exportar_powerbi.py`: transforma o `vendas.csv` em um **modelo estrela** (fato de vendas + calendário, produto, região e canal) em `data/powerbi/`, em formato brasileiro (`;` e vírgula decimal) ou americano (`--formato us`).
 - [`powerbi/medidas.dax`](powerbi/medidas.dax): medidas prontas (receita, ticket médio, crescimento sobre o ano anterior, participação, efeito de alta temporada).
+- [`powerbi/importar_dados.m`](powerbi/importar_dados.m) e [`powerbi/modelo.tmdl`](powerbi/modelo.tmdl): scripts para colar no Power BI Desktop (Power Query com a importação dos 5 CSVs; TMDL com os 4 relacionamentos e as 12 medidas).
 - [`powerbi/ROTEIRO.md`](powerbi/ROTEIRO.md): passo a passo de importação, relacionamentos, medidas e três páginas sugeridas, mais uma checagem para conferir se o dashboard bate com os números do README (receita total de R$ 4.429.491,93, 6.655 vendas, crescimento de 19,8%).
 
-Conferi no Python que o modelo exportado preserva os totais (as 6.655 linhas e a receita de R$ 4.429.491,93 batem com o CSV original, e o calendário cobre os 731 dias de 2023 e 2024). As medidas DAX seguem padrões clássicos, mas ainda não foram executadas dentro do Power BI Desktop.
+Conferi no Python que o modelo exportado preserva os totais (as 6.655 linhas e a receita de R$ 4.429.491,93 batem com o CSV original, e o calendário cobre os 731 dias de 2023 e 2024). Os testes conferem que os nomes de tabelas, colunas, relacionamentos e medidas dos scripts batem com o modelo exportado. Os scripts e as medidas DAX seguem a sintaxe documentada, mas ainda não foram executados dentro do Power BI Desktop; as páginas do dashboard e as capturas dependem de montar o relatório lá.
 
 ## Consultas SQL (`sql/consultas.sql`)
 
@@ -122,15 +123,16 @@ Conferi no Python que o modelo exportado preserva os totais (as 6.655 linhas e a
 
 ## Testes
 
-38 testes com `pytest` (nenhum depende de internet), cobrindo:
+46 testes com `pytest` (nenhum depende de internet), cobrindo:
 - reprodutibilidade da geração de dados (mesma seed → mesmo resultado)
 - validade dos dados gerados (datas no período, categorias/produtos válidos, receita consistente)
 - corretude dos cálculos de métricas de negócio usados no relatório
 - análise do IBGE: leitura da resposta da API (amostra real salva), fator sazonal, variações anuais e a requisição mockada
 - modelo estrela do Power BI: totais preservados, chaves sem órfãos, calendário contínuo e formatos de CSV
+- scripts do Power BI (M, TMDL e DAX): nomes de colunas, relacionamentos e medidas consistentes com o modelo exportado
 
 ## Próximos passos
 
-- [ ] Montar o dashboard no Power BI Desktop e publicar as capturas (o modelo, as medidas DAX e o roteiro já estão prontos em `powerbi/`)
+- [ ] Montar o dashboard no Power BI Desktop e publicar as capturas (o modelo, as medidas DAX, os scripts M/TMDL e o roteiro já estão prontos em `powerbi/`; falta abrir o Desktop, colar os scripts e montar as páginas)
 - [x] Versão com dados reais de uma API pública (IBGE/PMC, veja "Versão com dados reais")
 - [x] Recalibrar o gerador sintético com a sazonalidade real do IBGE (veja "Recalibração do gerador")

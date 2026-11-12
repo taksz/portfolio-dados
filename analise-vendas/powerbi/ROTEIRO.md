@@ -61,15 +61,15 @@ Abra [`medidas.dax`](medidas.dax) e crie cada medida em **Modelagem > Nova medid
 
 **Página 3 — Sazonalidade**
 - Colunas: `Receita Média Mensal` por `dim_calendario[mes_nome]` (ordenar por `mes_num`).
-- Cartão: `Efeito Alta Temporada` (compare com o 2,15x citado no README).
+- Cartão: `Efeito Alta Temporada` (compare com o 1,26x citado no README).
 - Matriz: `dim_produto[categoria]` nas linhas, `ano` nas colunas, `Receita Total` nos valores.
 
 ## 6. Conferir se os números batem
 
 Com nenhum filtro aplicado, o dashboard deve mostrar os mesmos valores do README:
 
-- `Receita Total` = **R$ 4.834.928,89** e `Vendas` = **7.618**.
-- Crescimento de 2024 sobre 2023 = **17,0%**.
+- `Receita Total` = **R$ 4.429.491,93** e `Vendas` = **6.655**.
+- Crescimento de 2024 sobre 2023 = **19,8%**.
 
 Se os valores não baterem, o mais comum é o separador decimal importado errado (passo 2) ou a tabela de calendário não marcada como tabela de datas (passo 3).
 

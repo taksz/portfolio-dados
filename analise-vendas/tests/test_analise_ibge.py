@@ -76,8 +76,14 @@ def test_efeito_fim_de_ano():
 
 def test_fator_sintetico_reflete_gerar_dados():
     f = ai.fator_sazonal_sintetico()
-    assert f.idxmax() == 11 and f.mean() == pytest.approx(1.0)
-    assert ai.efeito_fim_de_ano(f) > 2  # o gerador supõe um efeito forte
+    assert f.idxmax() == 12 and f.idxmin() == 2 and f.mean() == pytest.approx(1.0)
+    assert 1.1 < ai.efeito_fim_de_ano(f) < 1.3  # calibrado com o IBGE: efeito moderado
+
+
+def test_calibracao_anterior_era_bem_mais_forte():
+    antes, agora = ai.fator_sazonal_anterior(), ai.fator_sazonal_sintetico()
+    assert antes.idxmax() == 11 and antes.mean() == pytest.approx(1.0)
+    assert ai.efeito_fim_de_ano(antes) > 2 > ai.efeito_fim_de_ano(agora)
 
 
 def test_variacao_anual():
@@ -94,7 +100,7 @@ def test_resumo_com_serie_sintetica():
     assert r["meses"] == 84 and r["ultimo_mes"] == pd.Timestamp("2025-12-01")
     assert r["queda_covid_pct"] == pytest.approx(-20.0)
     assert r["pico_dessaz"] == 100.0
-    assert r["efeito_real"] > 1 and r["efeito_sintetico"] > r["efeito_real"]
+    assert r["efeito_real"] > 1 and r["efeito_anterior"] > r["efeito_real"]
 
 
 @responses.activate
@@ -115,5 +121,5 @@ def test_graficos_geram_png(tmp_path, monkeypatch):
     monkeypatch.setattr(ai, "IMGS_DIR", tmp_path)
     df = serie_sintetica(range(2012, 2026))
     f = ai.fator_sazonal_mensal(df, 2014, 2025)
-    for caminho in (ai.grafico_serie(df), ai.grafico_sazonalidade(f, ai.fator_sazonal_sintetico(), (2014, 2025))):
+    for caminho in (ai.grafico_serie(df), ai.grafico_sazonalidade(f, ai.fator_sazonal_sintetico(), (2014, 2025), ai.fator_sazonal_anterior())):
         assert caminho.exists() and caminho.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"

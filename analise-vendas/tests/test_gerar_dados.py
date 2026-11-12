@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import pandas as pd
 
@@ -57,3 +58,13 @@ def test_fator_sazonal_alto_temporada_maior():
     import datetime as dt
     assert _fator_sazonal(dt.date(2023, 11, 15)) > _fator_sazonal(dt.date(2023, 6, 15))
     assert _fator_sazonal(dt.date(2023, 12, 15)) > _fator_sazonal(dt.date(2023, 6, 15))
+
+
+def test_fatores_sazonais_calibrados_com_o_ibge():
+    from gerar_dados import FATOR_SAZONAL_MES
+
+    assert sorted(FATOR_SAZONAL_MES) == list(range(1, 13))
+    assert sum(FATOR_SAZONAL_MES.values()) / 12 == pytest.approx(1.0, abs=0.005)
+    assert max(FATOR_SAZONAL_MES, key=FATOR_SAZONAL_MES.get) == 12  # dezembro é o mês mais forte
+    assert min(FATOR_SAZONAL_MES, key=FATOR_SAZONAL_MES.get) == 2   # fevereiro é o mais fraco
+    assert FATOR_SAZONAL_MES[12] > FATOR_SAZONAL_MES[11]

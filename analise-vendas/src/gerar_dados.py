@@ -6,9 +6,8 @@ o mesmo arquivo — importante para que a análise seja reprodutível.
 
 Por que dados sintéticos? Para um projeto de portfólio público, gerar os
 próprios dados (em vez de baixar um dataset real de terceiros) evita
-problemas de licença/privacidade e permite controlar propositalmente
-padrões de sazonalidade (Black Friday, Natal) que tornam a análise mais
-interessante de demonstrar.
+problemas de licença/privacidade. A sazonalidade mensal (Black Friday, Natal)
+é calibrada com dados reais do IBGE (veja FATOR_SAZONAL_MES).
 
 Uso:
     python src/gerar_dados.py
@@ -41,16 +40,25 @@ PESOS_REGIOES = [0.45, 0.18, 0.22, 0.09, 0.06]
 
 CANAIS = ["Online", "Loja Física"]
 
+# Fator sazonal médio por mês (média anual = 1), calculado pela razão entre o índice de
+# volume de vendas do varejo brasileiro e o mesmo índice com ajuste sazonal, média de
+# 2014 a 2025. Fonte: IBGE, Pesquisa Mensal de Comércio (SIDRA, tabela 8880), obtido
+# com `python src/analise_ibge.py`. Os valores ficam fixos aqui para a geração dos dados
+# continuar offline e reprodutível; rode a análise do IBGE para conferir ou atualizar.
+FATOR_SAZONAL_MES = {
+    1: 0.971, 2: 0.900, 3: 0.979, 4: 0.952, 5: 0.987, 6: 0.957,
+    7: 0.987, 8: 0.994, 9: 0.958, 10: 1.003, 11: 1.054, 12: 1.257,
+}
+
 
 def _fator_sazonal(data: dt.date) -> float:
-    """Multiplicador de demanda: pico em novembro (Black Friday) e dezembro (Natal)."""
-    if data.month == 11:
-        return 2.2
-    if data.month == 12:
-        return 1.8
-    if data.month in (1, 2):  # retração pós-festas
-        return 0.75
-    return 1.0
+    """Multiplicador de demanda por mês, calibrado com a sazonalidade REAL do varejo.
+
+    Veja FATOR_SAZONAL_MES: dezembro é o mês mais forte, novembro vem em seguida e
+    fevereiro é o mais fraco. Antes da recalibração este valor era escolhido à mão
+    (novembro 2,2; dezembro 1,8; janeiro/fevereiro 0,75), o que exagerava o efeito.
+    """
+    return FATOR_SAZONAL_MES[data.month]
 
 
 def _fator_crescimento(data: dt.date) -> float:

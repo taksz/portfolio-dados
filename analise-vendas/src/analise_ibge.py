@@ -39,6 +39,9 @@ IMGS_DIR = BASE_DIR / "imgs"
 # c11046/56734 = índice de volume de vendas; n1/all = Brasil.
 URL_PMC = "https://apisidra.ibge.gov.br/values/t/8880/n1/all/v/7169,7170/p/all/c11046/56734"
 TIMEOUT = 60
+# Multiplicadores que o gerador usava antes da recalibração (novembro, dezembro, jan/fev);
+# os demais meses valiam 1,0. Mantidos aqui só para comparar "antes" e "depois".
+FATOR_SAZONAL_ANTERIOR = {11: 2.2, 12: 1.8, 1: 0.75, 2: 0.75}
 MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
 plt.rcParams["figure.dpi"] = 110
@@ -91,8 +94,14 @@ def fator_sazonal_mensal(df: pd.DataFrame, ano_inicial: int, ano_final: int) -> 
 
 
 def fator_sazonal_sintetico() -> pd.Series:
-    """Multiplicador de demanda mensal usado em gerar_dados.py, normalizado para média 1."""
+    """Multiplicador de demanda mensal usado em gerar_dados.py hoje, normalizado para média 1."""
     bruto = pd.Series({m: _fator_sazonal(dt.date(2023, m, 1)) for m in range(1, 13)})
+    return bruto / bruto.mean()
+
+
+def fator_sazonal_anterior() -> pd.Series:
+    """Calibração antiga do gerador (escolhida à mão, antes de usar o IBGE), normalizada para média 1."""
+    bruto = pd.Series({m: FATOR_SAZONAL_ANTERIOR.get(m, 1.0) for m in range(1, 13)})
     return bruto / bruto.mean()
 
 
@@ -115,6 +124,7 @@ def resumo(df: pd.DataFrame, ano_inicial: int = 2014, ano_final: int = 2025) -> 
     pico = dessaz.idxmax()
     real = fator_sazonal_mensal(df, ano_inicial, ano_final)
     sint = fator_sazonal_sintetico()
+    anterior = fator_sazonal_anterior()
     return {
         "primeiro_mes": df["periodo"].iloc[0],
         "ultimo_mes": ultimo["periodo"],
@@ -130,6 +140,8 @@ def resumo(df: pd.DataFrame, ano_inicial: int = 2014, ano_final: int = 2025) -> 
         "fator_sintetico": sint,
         "efeito_real": efeito_fim_de_ano(real),
         "efeito_sintetico": efeito_fim_de_ano(sint),
+        "fator_anterior": anterior,
+        "efeito_anterior": efeito_fim_de_ano(anterior),
         "ano_inicial": ano_inicial,
         "ano_final": ano_final,
     }
@@ -152,14 +164,21 @@ def grafico_serie(df: pd.DataFrame) -> Path:
     return caminho
 
 
-def grafico_sazonalidade(real: pd.Series, sintetico: pd.Series, anos: tuple[int, int]) -> Path:
+def grafico_sazonalidade(
+    real: pd.Series, sintetico: pd.Series, anos: tuple[int, int], anterior: Optional[pd.Series] = None
+) -> Path:
     fig, ax = plt.subplots(figsize=(10, 4.5))
-    largura = 0.4
-    x = range(12)
-    ax.bar([i - largura / 2 for i in x], real.values, largura, color="#2563eb", label=f"Real (IBGE, {anos[0]}-{anos[1]})")
-    ax.bar([i + largura / 2 for i in x], sintetico.values, largura, color="#f59e0b", label="Sintético (gerar_dados.py)")
+    x = list(range(12))
+    series = [(real, "#2563eb", f"Real (IBGE, {anos[0]}-{anos[1]})")]
+    if anterior is not None:
+        series.append((anterior, "#d1d5db", "Gerador antes da recalibração"))
+    series.append((sintetico, "#f59e0b", "Gerador recalibrado (gerar_dados.py)"))
+    largura = 0.8 / len(series)
+    for k, (valores, cor, rotulo) in enumerate(series):
+        deslocamento = (k - (len(series) - 1) / 2) * largura
+        ax.bar([i + deslocamento for i in x], valores.values, largura, color=cor, label=rotulo)
     ax.axhline(1, color="#9ca3af", linewidth=1, linestyle="--")
-    ax.set_xticks(list(x))
+    ax.set_xticks(x)
     ax.set_xticklabels(MESES)
     ax.set_ylabel("Fator sazonal (média anual = 1)")
     ax.set_title("Sazonalidade mensal: varejo real x dados sintéticos")
@@ -187,11 +206,14 @@ def imprimir_resumo(r: dict) -> None:
         print(f"Variação da média anual em {ano}: {r['var_' + str(ano)]:+.1f}%")
     print()
     print(f"Fator sazonal por mês ({r['ano_inicial']}-{r['ano_final']}, média = 1):")
-    print(f"{'mês':<5}{'real':>8}{'sintético':>12}")
+    print(f"{'mês':<5}{'real':>8}{'gerador antes':>15}{'gerador agora':>15}")
     for m in range(1, 13):
-        print(f"{MESES[m - 1]:<5}{r['fator_real'][m]:>8.3f}{r['fator_sintetico'][m]:>12.3f}")
+        print(f"{MESES[m - 1]:<5}{r['fator_real'][m]:>8.3f}{r['fator_anterior'][m]:>15.3f}{r['fator_sintetico'][m]:>15.3f}")
     print()
-    print(f"Efeito nov/dez sobre os demais meses — real: {r['efeito_real']:.2f}x | sintético: {r['efeito_sintetico']:.2f}x")
+    print(
+        f"Efeito nov/dez sobre os demais meses — real: {r['efeito_real']:.2f}x | "
+        f"gerador antes: {r['efeito_anterior']:.2f}x | gerador agora: {r['efeito_sintetico']:.2f}x"
+    )
 
 
 def main() -> None:
@@ -203,7 +225,7 @@ def main() -> None:
     r = resumo(df)
     imprimir_resumo(r)
     grafico_serie(df)
-    grafico_sazonalidade(r["fator_real"], r["fator_sintetico"], (r["ano_inicial"], r["ano_final"]))
+    grafico_sazonalidade(r["fator_real"], r["fator_sintetico"], (r["ano_inicial"], r["ano_final"]), r["fator_anterior"])
     print("\nGráficos salvos em imgs/ibge_serie.png e imgs/ibge_sazonalidade.png")
 
 

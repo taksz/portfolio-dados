@@ -15,6 +15,7 @@ Rodar localmente:
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -28,7 +29,8 @@ from . import models
 from .shortener import validar_url
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR.parent / "encurtador.db"
+# ENCURTADOR_DB muda o arquivo do banco (útil em hospedagem, com disco montado).
+DB_PATH = Path(os.environ.get("ENCURTADOR_DB") or BASE_DIR.parent / "encurtador.db")
 STATIC_DIR = BASE_DIR / "static"
 
 
@@ -36,6 +38,12 @@ STATIC_DIR = BASE_DIR / "static"
 async def lifespan(app: FastAPI):
     conn = models.conectar(str(DB_PATH))
     models.inicializar_schema(conn)
+    # ENCURTADOR_DEMO=1: se o banco estiver vazio, cria links com cliques SIMULADOS.
+    # Serve para uma hospedagem de demonstração não abrir vazia (veja app/demo.py).
+    if os.environ.get("ENCURTADOR_DEMO") == "1" and not models.listar_urls(conn):
+        from . import demo
+
+        demo.popular(conn)
     conn.close()
     yield
 

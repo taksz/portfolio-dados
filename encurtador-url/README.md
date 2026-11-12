@@ -104,6 +104,23 @@ python -m app.demo           # cria os links de demonstração
 python -m app.demo --limpar  # remove só os links de demonstração
 ```
 
+## Publicar online (Render)
+
+Para qualquer pessoa usar o encurtador pelo navegador, sem instalar nada, o projeto precisa estar hospedado. O repositório já traz o arquivo `render.yaml` na raiz, que descreve o serviço para o [Render](https://render.com) (plano grátis, roda Python):
+
+1. Crie uma conta no Render e escolha **New > Blueprint**.
+2. Conecte o repositório `portfolio-dados`. O Render lê o `render.yaml` e propõe o serviço `encurtador-url`.
+3. Confirme. Em alguns minutos o site fica no ar em um endereço `https://encurtador-url-xxxx.onrender.com`.
+
+Variáveis de ambiente que o projeto reconhece:
+
+| Variável | Efeito |
+|---|---|
+| `ENCURTADOR_DB` | Caminho do arquivo SQLite (padrão: `encurtador.db` na pasta do projeto). |
+| `ENCURTADOR_DEMO` | Com `1`, se o banco estiver vazio ao iniciar, cria os links de demonstração com cliques **simulados**. |
+
+No plano grátis o disco é apagado a cada reinício e o serviço "dorme" depois de um tempo sem acessos (a primeira visita seguinte demora uns segundos). Por isso o `render.yaml` liga `ENCURTADOR_DEMO=1`: o site sempre abre com dados de exemplo. Links criados por visitantes não são permanentes nessa hospedagem. Para guardá-los, é preciso um disco persistente (plano pago do Render) apontado por `ENCURTADOR_DB`.
+
 ## Modelo de dados (SQLite)
 
 ```

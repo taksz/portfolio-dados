@@ -94,3 +94,28 @@ def test_pagina_inicial_nao_conflita_com_redirecionamento(client):
     codigo = client.post("/api/shorten", json={"url": "https://exemplo.com"}).json()["codigo"]
     assert client.get("/", follow_redirects=False).status_code == 200
     assert client.get(f"/{codigo}", follow_redirects=False).status_code == 302
+
+
+def test_demo_na_subida_popula_banco_vazio(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "DB_PATH", tmp_path / "demo.db")
+    monkeypatch.setenv("ENCURTADOR_DEMO", "1")
+    with TestClient(main.app) as c:
+        codigos = {u["codigo"] for u in c.get("/api/urls").json()}
+    assert codigos == {"demo-docs", "demo-portfolio", "demo-dados"}
+
+
+def test_demo_na_subida_nao_mexe_em_banco_com_links(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "DB_PATH", tmp_path / "demo.db")
+    with TestClient(main.app) as c:
+        c.post("/api/shorten", json={"url": "https://exemplo.com"})
+    monkeypatch.setenv("ENCURTADOR_DEMO", "1")
+    with TestClient(main.app) as c:
+        urls = c.get("/api/urls").json()
+    assert [u["url_original"] for u in urls] == ["https://exemplo.com"]
+
+
+def test_sem_variavel_de_demo_banco_comeca_vazio(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "DB_PATH", tmp_path / "demo.db")
+    monkeypatch.delenv("ENCURTADOR_DEMO", raising=False)
+    with TestClient(main.app) as c:
+        assert c.get("/api/urls").json() == []

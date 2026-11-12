@@ -1,0 +1,18 @@
+# Blueprint do Render (https://render.com) para publicar o encurtador-url.
+# O repositório é um monorepo: rootDir aponta para a pasta do projeto.
+services:
+  - type: web
+    name: encurtador-url
+    runtime: python
+    plan: free
+    rootDir: encurtador-url
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/urls
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      # Demonstração: o disco do plano grátis é apagado a cada reinício, então o
+      # site recria links com cliques SIMULADOS quando o banco estiver vazio.
+      - key: ENCURTADOR_DEMO
+        value: "1"

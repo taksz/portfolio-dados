@@ -1,0 +1,11 @@
+expression Pasta = "D:\Portifolio de dados\portfolio-dados\analise-vendas\data\powerbi" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: c06c5470-325b-5d24-affc-0e6318f9072c
+	queryGroup: Parametros
+
+expression Separador = ";" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 78f30605-02e5-5699-9d1b-a1e36dc15efe
+	queryGroup: Parametros
+
+expression Cultura = "pt-BR" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 6b991045-c00b-53ef-9847-e7c265503488
+	queryGroup: Parametros

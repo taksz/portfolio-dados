@@ -1,0 +1,77 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "colunas_mes",
+  "position": {
+    "x": 20,
+    "y": 140,
+    "z": 0,
+    "height": 560,
+    "width": 780
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_calendario"
+                    }
+                  },
+                  "Property": "mes_nome"
+                }
+              },
+              "queryRef": "dim_calendario.mes_nome",
+              "nativeQueryRef": "mes_nome"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Receita Média Mensal"
+                }
+              },
+              "queryRef": "Medidas.Receita Média Mensal",
+              "nativeQueryRef": "Receita Média Mensal"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Receita média por mês do ano'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

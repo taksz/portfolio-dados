@@ -1,0 +1,24 @@
+table dim_regiao
+	lineageTag: ebacdfa4-82cb-5867-9acf-fcd6c254e5f2
+
+	column id_regiao
+		dataType: int64
+		lineageTag: cb5f479a-7331-523b-9474-ff52bf01e5d4
+		summarizeBy: none
+		sourceColumn: id_regiao
+
+	column regiao
+		dataType: string
+		lineageTag: cfc9f13e-7b1f-5109-90ca-7e973642562e
+		summarizeBy: none
+		sourceColumn: regiao
+
+	partition dim_regiao = m
+		mode: import
+		source =
+				let
+				    Fonte = Csv.Document(File.Contents(Pasta & "\dim_regiao.csv"), [Delimiter = Separador, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Cabecalho = Table.PromoteHeaders(Fonte, [PromoteAllScalars = true]),
+				    Tipos = Table.TransformColumnTypes(Cabecalho, {{"id_regiao", Int64.Type}, {"regiao", type text}}, Cultura)
+				in
+				    Tipos

@@ -8,8 +8,9 @@
 ///      por script apagaria as colunas importadas.
 ///   4. Em dim_calendario, selecione a coluna "mes_nome" > Classificar por coluna > "mes_num".
 ///
-/// Aviso: o script segue a sintaxe TMDL documentada, mas não foi executado dentro do Power BI
-/// Desktop pelo autor. Se der erro, o editor aponta a linha; os relacionamentos também podem
+/// Aviso: a lógica deste script (relacionamentos e medidas) é a mesma do projeto PBIP, que foi
+/// conferida no Power BI Desktop, mas a colagem deste script em si não foi testada. Se der erro,
+/// o editor aponta a linha; os relacionamentos também podem
 /// ser criados arrastando as colunas na visão de Modelo (veja ROTEIRO.md), e as medidas podem
 /// ser coladas uma a uma a partir de medidas.dax.
 createOrReplace
@@ -55,7 +56,13 @@ createOrReplace
 		measure 'Receita Ano Anterior' = CALCULATE ( [Receita Total], SAMEPERIODLASTYEAR ( dim_calendario[data] ) )
 			formatString: "R$ #,0.00"
 
-		measure 'Crescimento YoY %' = DIVIDE ( [Receita Total] - [Receita Ano Anterior], [Receita Ano Anterior] )
+		measure 'Crescimento YoY %' = ```
+				VAR AnoAtual = MAX ( dim_calendario[ano] )
+				VAR ReceitaAtual = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual )
+				VAR ReceitaAnterior = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual - 1 )
+				RETURN
+				    DIVIDE ( ReceitaAtual - ReceitaAnterior, ReceitaAnterior )
+				```
 			formatString: 0.0%
 
 		measure 'Receita Acumulada no Ano' = TOTALYTD ( [Receita Total], dim_calendario[data] )

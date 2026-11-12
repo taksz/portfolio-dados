@@ -3,3 +3,5 @@ data/*.db
 __pycache__/
 .pytest_cache/
 data/powerbi/
+# Cache local do Power BI Desktop (criado ao abrir o projeto .pbip)
+powerbi/**/.pbi/

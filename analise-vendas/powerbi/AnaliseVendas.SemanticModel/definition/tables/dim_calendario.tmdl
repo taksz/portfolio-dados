@@ -1,0 +1,71 @@
+table dim_calendario
+	lineageTag: 49abbb28-9783-5d6a-89cb-15cb84e1dd4b
+	dataCategory: Time
+
+	column data
+		dataType: dateTime
+		lineageTag: 6db0df84-ec4d-59e6-b233-1a05f34de68b
+		isKey
+		formatString: dd/mm/yyyy
+		summarizeBy: none
+		sourceColumn: data
+
+	column ano
+		dataType: int64
+		lineageTag: 92cac62f-1199-5aac-989b-6bc224602834
+		summarizeBy: none
+		sourceColumn: ano
+
+	column trimestre
+		dataType: string
+		lineageTag: 4445f411-30c8-5494-acc4-3fcee151a000
+		summarizeBy: none
+		sourceColumn: trimestre
+
+	column mes_num
+		dataType: int64
+		lineageTag: b3cffc64-79bf-54bc-94b2-39c037b0a07d
+		summarizeBy: none
+		sourceColumn: mes_num
+
+	column mes_nome
+		dataType: string
+		lineageTag: a24de550-4305-5a93-8e72-fd92681630a6
+		summarizeBy: none
+		sourceColumn: mes_nome
+		sortByColumn: mes_num
+
+	column ano_mes
+		dataType: string
+		lineageTag: 4c267c7f-d9f9-5a56-a35e-209d53403ae1
+		summarizeBy: none
+		sourceColumn: ano_mes
+
+	column dia_semana_num
+		dataType: int64
+		lineageTag: 135193f4-0588-539c-bacb-5f0d96aaf325
+		summarizeBy: none
+		sourceColumn: dia_semana_num
+
+	column dia_semana
+		dataType: string
+		lineageTag: ff43a82c-d3ea-5b64-a557-97f7ba96e560
+		summarizeBy: none
+		sourceColumn: dia_semana
+		sortByColumn: dia_semana_num
+
+	column alta_temporada
+		dataType: string
+		lineageTag: b40cec49-b404-5a53-ab60-a063c96a5a6d
+		summarizeBy: none
+		sourceColumn: alta_temporada
+
+	partition dim_calendario = m
+		mode: import
+		source =
+				let
+				    Fonte = Csv.Document(File.Contents(Pasta & "\dim_calendario.csv"), [Delimiter = Separador, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Cabecalho = Table.PromoteHeaders(Fonte, [PromoteAllScalars = true]),
+				    Tipos = Table.TransformColumnTypes(Cabecalho, {{"data", type date}, {"ano", Int64.Type}, {"trimestre", type text}, {"mes_num", Int64.Type}, {"mes_nome", type text}, {"ano_mes", type text}, {"dia_semana_num", Int64.Type}, {"dia_semana", type text}, {"alta_temporada", type text}}, Cultura)
+				in
+				    Tipos

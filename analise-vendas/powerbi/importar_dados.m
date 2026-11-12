@@ -7,8 +7,8 @@
 // Crie primeiro os três parâmetros (Pasta, Separador, Cultura); depois as cinco tabelas.
 // Ao terminar: Fechar e aplicar. Depois siga com modelo.tmdl (relacionamentos e medidas).
 //
-// Aviso: este script segue a sintaxe padrão do Power Query, mas não foi executado dentro do
-// Power BI Desktop pelo autor. Se alguma consulta der erro, o Editor Avançado mostra a linha.
+// Aviso: as consultas são as mesmas do projeto PBIP, conferido no Power BI Desktop, mas a colagem
+// manual deste script não foi testada. Se alguma consulta der erro, o Editor Avançado mostra a linha.
 
 // ============================================================================
 // CONSULTA "Pasta"  (texto): caminho da pasta data\powerbi desta máquina

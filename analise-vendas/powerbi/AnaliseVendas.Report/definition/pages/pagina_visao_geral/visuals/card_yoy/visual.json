@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "card_yoy",
+  "position": {
+    "x": 980,
+    "y": 100,
+    "z": 0,
+    "height": 100,
+    "width": 280
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Crescimento YoY %"
+                }
+              },
+              "queryRef": "Medidas.Crescimento YoY %",
+              "nativeQueryRef": "Crescimento YoY %"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

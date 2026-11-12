@@ -1,0 +1,63 @@
+table fato_vendas
+	lineageTag: a4b00447-64db-5eaa-8a07-a9692bab161d
+
+	column id_venda
+		dataType: int64
+		lineageTag: 15f4dd8d-ab1c-5e45-b1dc-e46fad65ac89
+		summarizeBy: none
+		sourceColumn: id_venda
+
+	column data
+		dataType: dateTime
+		lineageTag: 479e1232-d010-58a4-9211-568c55d8cb6d
+		formatString: dd/mm/yyyy
+		summarizeBy: none
+		sourceColumn: data
+
+	column id_produto
+		dataType: int64
+		lineageTag: f9e9b538-f996-58bb-9a88-cfb6e8a240ab
+		summarizeBy: none
+		sourceColumn: id_produto
+
+	column id_regiao
+		dataType: int64
+		lineageTag: 736c3fb4-dad2-5c82-8538-52f8df393b03
+		summarizeBy: none
+		sourceColumn: id_regiao
+
+	column id_canal
+		dataType: int64
+		lineageTag: aedb616e-228a-52e3-bf1c-10607acbc933
+		summarizeBy: none
+		sourceColumn: id_canal
+
+	column quantidade
+		dataType: int64
+		lineageTag: cec6ef9c-ed5c-5c75-9af1-df62126f28b9
+		summarizeBy: sum
+		sourceColumn: quantidade
+
+	column preco_unitario
+		dataType: double
+		lineageTag: 7d35ff60-7a92-5f70-a618-b5908c1069c1
+		formatString: "R$" #,0.00
+		summarizeBy: none
+		sourceColumn: preco_unitario
+
+	column receita
+		dataType: double
+		lineageTag: 5e4fc30d-826b-5819-baf5-6a35e4e1db87
+		formatString: "R$" #,0.00
+		summarizeBy: none
+		sourceColumn: receita
+
+	partition fato_vendas = m
+		mode: import
+		source =
+				let
+				    Fonte = Csv.Document(File.Contents(Pasta & "\fato_vendas.csv"), [Delimiter = Separador, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Cabecalho = Table.PromoteHeaders(Fonte, [PromoteAllScalars = true]),
+				    Tipos = Table.TransformColumnTypes(Cabecalho, {{"id_venda", Int64.Type}, {"data", type date}, {"id_produto", Int64.Type}, {"id_regiao", Int64.Type}, {"id_canal", Int64.Type}, {"quantidade", Int64.Type}, {"preco_unitario", type number}, {"receita", type number}}, Cultura)
+				in
+				    Tipos

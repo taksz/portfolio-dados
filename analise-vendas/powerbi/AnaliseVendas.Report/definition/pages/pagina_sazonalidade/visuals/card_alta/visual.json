@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "card_alta",
+  "position": {
+    "x": 340,
+    "y": 20,
+    "z": 0,
+    "height": 100,
+    "width": 460
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Receita Alta Temporada"
+                }
+              },
+              "queryRef": "Medidas.Receita Alta Temporada",
+              "nativeQueryRef": "Receita Alta Temporada"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

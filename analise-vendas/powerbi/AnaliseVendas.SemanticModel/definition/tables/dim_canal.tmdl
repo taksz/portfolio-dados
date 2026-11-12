@@ -1,0 +1,24 @@
+table dim_canal
+	lineageTag: c5dac1f9-6a03-5f55-bc56-3257a500ec61
+
+	column id_canal
+		dataType: int64
+		lineageTag: b65c0be0-e8fa-51ec-b7d8-a353226f6ffc
+		summarizeBy: none
+		sourceColumn: id_canal
+
+	column canal
+		dataType: string
+		lineageTag: b2648669-3d7f-5ccc-8b8b-aa907bb7fa81
+		summarizeBy: none
+		sourceColumn: canal
+
+	partition dim_canal = m
+		mode: import
+		source =
+				let
+				    Fonte = Csv.Document(File.Contents(Pasta & "\dim_canal.csv"), [Delimiter = Separador, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Cabecalho = Table.PromoteHeaders(Fonte, [PromoteAllScalars = true]),
+				    Tipos = Table.TransformColumnTypes(Cabecalho, {{"id_canal", Int64.Type}, {"canal", type text}}, Cultura)
+				in
+				    Tipos

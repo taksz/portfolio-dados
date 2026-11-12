@@ -3,9 +3,8 @@
 // Como usar: no Power BI Desktop, em Modelagem > Nova medida, cole uma medida por vez
 // (cada bloco abaixo começa com o nome da medida). Veja o passo a passo em ROTEIRO.md.
 //
-// Aviso: estas medidas seguem padrões clássicos do DAX, mas não foram executadas
-// dentro do Power BI Desktop pelo autor do repositório de código; confira os valores
-// contra o painel de "Principais achados" do README (ex.: receita total R$ 4.429.491,93).
+// Estas medidas são as mesmas do projeto src/gerar_projeto_pbip.py, que foi aberto no Power BI
+// Desktop; os valores conferem com o README (ex.: receita total R$ 4.429.491,93, 6.655 vendas).
 
 // --- Básicas ---------------------------------------------------------------
 
@@ -22,8 +21,14 @@ Ticket Médio = DIVIDE ( [Receita Total], [Vendas] )
 Receita Ano Anterior =
 CALCULATE ( [Receita Total], SAMEPERIODLASTYEAR ( dim_calendario[data] ) )
 
+// Crescimento do último ano no contexto de filtros sobre o ano anterior. Sem filtro de ano,
+// compara 2024 com 2023 (19,8%). Fica em branco quando o ano anterior não tem dados.
 Crescimento YoY % =
-DIVIDE ( [Receita Total] - [Receita Ano Anterior], [Receita Ano Anterior] )
+VAR AnoAtual = MAX ( dim_calendario[ano] )
+VAR ReceitaAtual = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual )
+VAR ReceitaAnterior = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual - 1 )
+RETURN
+    DIVIDE ( ReceitaAtual - ReceitaAnterior, ReceitaAnterior )
 
 Receita Acumulada no Ano = TOTALYTD ( [Receita Total], dim_calendario[data] )
 

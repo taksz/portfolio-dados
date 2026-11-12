@@ -1,0 +1,69 @@
+table Medidas
+	lineageTag: 68ea32f3-4a0d-5170-84c1-b3a597b1e9f3
+
+	measure 'Receita Total' = SUM ( fato_vendas[receita] )
+		formatString: "R$" #,0.00
+		lineageTag: 2506059c-9b65-5d9f-aba1-2c57efc6502b
+
+	measure 'Vendas' = COUNTROWS ( fato_vendas )
+		formatString: #,0
+		lineageTag: 0c77ed6e-42cb-5199-9308-4385bca50c15
+
+	measure 'Unidades Vendidas' = SUM ( fato_vendas[quantidade] )
+		formatString: #,0
+		lineageTag: 6575942d-5b3f-5a76-ab25-d7f7254c83c3
+
+	measure 'Ticket Médio' = DIVIDE ( [Receita Total], [Vendas] )
+		formatString: "R$" #,0.00
+		lineageTag: 73c79bdc-0032-54db-9bf2-bfe4bec3db64
+
+	measure 'Receita Ano Anterior' = CALCULATE ( [Receita Total], SAMEPERIODLASTYEAR ( dim_calendario[data] ) )
+		formatString: "R$" #,0.00
+		lineageTag: 12506404-8d97-56cd-bbda-afdb477a5291
+
+	measure 'Crescimento YoY %' = ```
+				VAR AnoAtual = MAX ( dim_calendario[ano] )
+				VAR ReceitaAtual = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual )
+				VAR ReceitaAnterior = CALCULATE ( [Receita Total], dim_calendario[ano] = AnoAtual - 1 )
+				RETURN DIVIDE ( ReceitaAtual - ReceitaAnterior, ReceitaAnterior )
+				```
+		formatString: 0.0%
+		lineageTag: cca14334-85b7-5630-a4e1-90adbd8cdabe
+
+	measure 'Receita Acumulada no Ano' = TOTALYTD ( [Receita Total], dim_calendario[data] )
+		formatString: "R$" #,0.00
+		lineageTag: 4fa9109e-5e18-5a06-8840-0be1c31101f1
+
+	measure 'Participação na Receita %' = DIVIDE ( [Receita Total], CALCULATE ( [Receita Total], ALLSELECTED () ) )
+		formatString: 0.0%
+		lineageTag: 176009c6-d9ac-5db9-91d4-06d7a6a53fc2
+
+	measure 'Receita Online %' = DIVIDE ( CALCULATE ( [Receita Total], dim_canal[canal] = "Online" ), [Receita Total] )
+		formatString: 0.0%
+		lineageTag: 864ac5de-9172-5dd5-b88d-10b442c989d5
+
+	measure 'Receita Alta Temporada' = CALCULATE ( [Receita Total], dim_calendario[alta_temporada] = "Sim" )
+		formatString: "R$" #,0.00
+		lineageTag: cc59758b-0ae3-5709-b78e-dedd986134b5
+
+	measure 'Receita Média Mensal' = DIVIDE ( [Receita Total], DISTINCTCOUNT ( dim_calendario[ano_mes] ) )
+		formatString: "R$" #,0.00
+		lineageTag: 78820039-7f4a-5dc4-ac3d-884037f9af6c
+
+	measure 'Efeito Alta Temporada' = ```
+				VAR MediaAlta = CALCULATE ( [Receita Média Mensal], dim_calendario[alta_temporada] = "Sim" )
+				VAR MediaResto = CALCULATE ( [Receita Média Mensal], dim_calendario[alta_temporada] = "Não" )
+				RETURN DIVIDE ( MediaAlta, MediaResto )
+				```
+		formatString: 0.00"x"
+		lineageTag: 23ca70f6-86e5-5601-9c91-c7367bceaeae
+
+	column Medidas
+		isHidden
+		lineageTag: fe3d0196-6bfb-593d-a4b6-a16da9993344
+		summarizeBy: none
+		sourceColumn: [Medidas]
+
+	partition Medidas = calculated
+		mode: import
+		source = ROW ( "Medidas", 1 )

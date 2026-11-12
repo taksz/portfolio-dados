@@ -1,0 +1,15 @@
+relationship dbfe7bef-b79d-526d-80f4-ffc8e6718ec1
+	fromColumn: fato_vendas.data
+	toColumn: dim_calendario.data
+
+relationship a3e5b1ef-5e76-5dc9-a986-ee4d39dd2cdd
+	fromColumn: fato_vendas.id_produto
+	toColumn: dim_produto.id_produto
+
+relationship 7d4a0d1f-2190-526c-9aae-9813013faa8f
+	fromColumn: fato_vendas.id_regiao
+	toColumn: dim_regiao.id_regiao
+
+relationship fe2c26ad-547d-5d04-b8f7-2012b771773b
+	fromColumn: fato_vendas.id_canal
+	toColumn: dim_canal.id_canal

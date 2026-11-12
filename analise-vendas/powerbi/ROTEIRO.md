@@ -1,6 +1,8 @@
 # Roteiro: dashboard de vendas no Power BI
 
-Este roteiro leva do `vendas.csv` a um dashboard interativo no **Power BI Desktop** (gratuito, Windows). O arquivo `.pbix` não está no repositório porque só pode ser criado dentro do Power BI Desktop; aqui estão os dados prontos, as medidas e o desenho das páginas.
+Este roteiro leva do `vendas.csv` a um dashboard interativo no **Power BI Desktop** (gratuito, Windows).
+
+**Caminho mais rápido:** o repositório gera o dashboard pronto como projeto do Power BI. Rode `python src/exportar_powerbi.py` e `python src/gerar_projeto_pbip.py`, abra `powerbi/AnaliseVendas.pbip` e clique em **Atualizar agora** no aviso do topo. O projeto tem o modelo, os relacionamentos, as medidas e as 3 páginas descritas no passo 5. O restante deste roteiro é para quem quer montar tudo à mão.
 
 ## 1. Gerar os dados do modelo estrela
 
@@ -32,7 +34,7 @@ Se preferir colar scripts em vez de seguir os passos 2 a 4 na mão:
 3. **Dois ajustes manuais** (o script não faz de propósito): marcar `dim_calendario` como **tabela de datas** e classificar `mes_nome` por `mes_num`.
 4. Siga para o passo 5 (páginas) e o passo 6 (conferência dos números).
 
-Os scripts seguem a sintaxe documentada do Power Query e do TMDL, mas **não foram executados no Power BI Desktop** pelo autor. O que foi verificado automaticamente (`tests/test_powerbi_scripts.py`): os nomes de tabelas e colunas dos scripts batem com o que o `exportar_powerbi.py` exporta, os relacionamentos ligam colunas existentes e com chave única no lado "um", e as 12 medidas do TMDL são as mesmas do `medidas.dax`. Se algo der erro no Desktop, os passos 2 a 4 acima fazem o mesmo manualmente.
+A lógica destes scripts (consultas M, relacionamentos e medidas) é a mesma do projeto PBIP, que foi executada e conferida no Power BI Desktop. A colagem manual dos scripts em si não foi testada lá. O que foi verificado automaticamente (`tests/test_powerbi_scripts.py`): os nomes de tabelas e colunas dos scripts batem com o que o `exportar_powerbi.py` exporta, os relacionamentos ligam colunas existentes e com chave única no lado "um", e as 12 medidas do TMDL são as mesmas do `medidas.dax`. Se algo der erro no Desktop, os passos 2 a 4 acima fazem o mesmo manualmente.
 
 ## 2. Importar no Power BI Desktop
 
@@ -80,7 +82,7 @@ Abra [`medidas.dax`](medidas.dax) e crie cada medida em **Modelagem > Nova medid
 Com nenhum filtro aplicado, o dashboard deve mostrar os mesmos valores do README:
 
 - `Receita Total` = **R$ 4.429.491,93** e `Vendas` = **6.655**.
-- Crescimento de 2024 sobre 2023 = **19,8%**.
+- Crescimento de 2024 sobre 2023 = **19,8%** (a medida `Crescimento YoY %` compara o último ano do contexto com o anterior).
 
 Se os valores não baterem, o mais comum é o separador decimal importado errado (passo 2) ou a tabela de calendário não marcada como tabela de datas (passo 3).
 

@@ -1,0 +1,14 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: pt-BR
+
+queryGroup Parametros
+
+ref table fato_vendas
+ref table dim_calendario
+ref table dim_produto
+ref table dim_regiao
+ref table dim_canal
+ref table Medidas

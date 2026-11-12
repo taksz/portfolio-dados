@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
+  "pageOrder": [
+    "pagina_visao_geral",
+    "pagina_regioes_canais",
+    "pagina_sazonalidade"
+  ],
+  "activePageName": "pagina_visao_geral"
+}

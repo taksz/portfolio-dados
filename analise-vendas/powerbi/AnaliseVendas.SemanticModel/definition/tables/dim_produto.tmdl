@@ -1,0 +1,30 @@
+table dim_produto
+	lineageTag: 05610194-3b3e-5e5b-8e27-afbb499b7146
+
+	column id_produto
+		dataType: int64
+		lineageTag: 61795c19-bfa5-5ea0-b8a3-ec5efe767727
+		summarizeBy: none
+		sourceColumn: id_produto
+
+	column produto
+		dataType: string
+		lineageTag: 8d0b933f-4040-5bfe-8ebe-7ed24efe910a
+		summarizeBy: none
+		sourceColumn: produto
+
+	column categoria
+		dataType: string
+		lineageTag: af1e832d-900f-5c1b-9b2c-d77792acfba2
+		summarizeBy: none
+		sourceColumn: categoria
+
+	partition dim_produto = m
+		mode: import
+		source =
+				let
+				    Fonte = Csv.Document(File.Contents(Pasta & "\dim_produto.csv"), [Delimiter = Separador, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Cabecalho = Table.PromoteHeaders(Fonte, [PromoteAllScalars = true]),
+				    Tipos = Table.TransformColumnTypes(Cabecalho, {{"id_produto", Int64.Type}, {"produto", type text}, {"categoria", type text}}, Cultura)
+				in
+				    Tipos

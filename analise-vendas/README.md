@@ -20,10 +20,11 @@ analise-vendas/
 │   ├── carregar_sqlite.py  # Carrega o CSV em data/vendas.db (SQLite)
 │   ├── analise.py          # Análise com pandas + geração dos gráficos em imgs/
 │   ├── analise_ibge.py     # Versão com dados REAIS: PMC/IBGE (API SIDRA) x dados sintéticos
-│   └── exportar_powerbi.py # Modelo estrela em CSV para o Power BI (data/powerbi/)
+│   ├── exportar_powerbi.py # Modelo estrela em CSV para o Power BI (data/powerbi/)
+│   └── gerar_projeto_pbip.py # Gera o projeto do Power BI (powerbi/AnaliseVendas.pbip)
 ├── sql/
 │   └── consultas.sql       # 8 consultas de negócio comentadas
-├── powerbi/                # Medidas DAX e roteiro para montar o dashboard no Power BI
+├── powerbi/                # Projeto Power BI (.pbip), medidas DAX, scripts M/TMDL e roteiro
 ├── imgs/                   # Gráficos gerados (PNG)
 ├── tests/                  # Testes pytest (dados, métricas, IBGE, exportação)
 └── requirements.txt
@@ -39,8 +40,9 @@ python src/carregar_sqlite.py   # gera data/vendas.db a partir do CSV
 python src/analise.py           # roda a análise e regrava os gráficos em imgs/
 python src/analise_ibge.py      # baixa dados reais do IBGE e compara a sazonalidade
 python src/exportar_powerbi.py  # gera os CSVs do modelo estrela para o Power BI
+python src/gerar_projeto_pbip.py # gera o projeto do dashboard (abra o .pbip no Power BI Desktop)
 
-pytest tests/ -v                # 46 testes (sem internet)
+pytest tests/ -v                # 59 testes (sem internet)
 ```
 
 As consultas de `sql/consultas.sql` podem ser rodadas com qualquer cliente SQLite sobre `data/vendas.db`.
@@ -99,14 +101,35 @@ Como o fator sazonal real é calculado: razão entre o índice original e o índ
 
 ## Dashboard no Power BI
 
-O dashboard interativo se monta no Power BI Desktop, que não roda em linha de comando. O que está pronto neste repositório:
+O dashboard está pronto como **projeto do Power BI (formato PBIP)**, gerado por `src/gerar_projeto_pbip.py`. Ele reúne as 5 tabelas do modelo estrela, os 4 relacionamentos, a tabela de datas, as 12 medidas DAX e 3 páginas de relatório. Foi aberto e conferido no Power BI Desktop: os números batem com os de "Principais achados".
 
-- `src/exportar_powerbi.py`: transforma o `vendas.csv` em um **modelo estrela** (fato de vendas + calendário, produto, região e canal) em `data/powerbi/`, em formato brasileiro (`;` e vírgula decimal) ou americano (`--formato us`).
-- [`powerbi/medidas.dax`](powerbi/medidas.dax): medidas prontas (receita, ticket médio, crescimento sobre o ano anterior, participação, efeito de alta temporada).
-- [`powerbi/importar_dados.m`](powerbi/importar_dados.m) e [`powerbi/modelo.tmdl`](powerbi/modelo.tmdl): scripts para colar no Power BI Desktop (Power Query com a importação dos 5 CSVs; TMDL com os 4 relacionamentos e as 12 medidas).
-- [`powerbi/ROTEIRO.md`](powerbi/ROTEIRO.md): passo a passo de importação, relacionamentos, medidas e três páginas sugeridas, mais uma checagem para conferir se o dashboard bate com os números do README (receita total de R$ 4.429.491,93, 6.655 vendas, crescimento de 19,8%).
+Como abrir (no Windows, com o [Power BI Desktop](https://www.microsoft.com/power-platform/products/power-bi/downloads) instalado):
 
-Conferi no Python que o modelo exportado preserva os totais (as 6.655 linhas e a receita de R$ 4.429.491,93 batem com o CSV original, e o calendário cobre os 731 dias de 2023 e 2024). Os testes conferem que os nomes de tabelas, colunas, relacionamentos e medidas dos scripts batem com o modelo exportado. Os scripts e as medidas DAX seguem a sintaxe documentada, mas ainda não foram executados dentro do Power BI Desktop; as páginas do dashboard e as capturas dependem de montar o relatório lá.
+```bash
+python src/gerar_dados.py          # gera data/vendas.csv
+python src/exportar_powerbi.py     # gera os CSVs do modelo estrela em data/powerbi/
+python src/gerar_projeto_pbip.py   # gera powerbi/AnaliseVendas.pbip
+```
+
+Depois abra `powerbi/AnaliseVendas.pbip`. Na primeira abertura o projeto vem sem dados: clique em **Atualizar agora** no aviso do topo (e em **Aplicar alterações**, se aparecer). O parâmetro `Pasta` guarda o caminho absoluto de `data/powerbi/` desta máquina; se mover o repositório, rode o gerador de novo. Para ter um `.pbix`, use **Arquivo > Salvar como** no Desktop.
+
+**Visão geral:** cartões (receita, vendas, ticket médio e crescimento sobre o ano anterior), receita por mês com o mesmo período do ano anterior e receita por categoria, com filtros por ano, região e canal.
+
+![Dashboard no Power BI: visão geral](imgs/powerbi_visao_geral.png)
+
+**Regiões e canais:** receita por região e participação de cada canal por ano (o Online sobe de 55,4% para 62,6%).
+
+![Dashboard no Power BI: regiões e canais](imgs/powerbi_regioes_canais.png)
+
+**Sazonalidade:** efeito de alta temporada (1,26x), receita média por mês do ano e participação por categoria.
+
+![Dashboard no Power BI: sazonalidade](imgs/powerbi_sazonalidade.png)
+
+Valores conferidos no Desktop, sem filtros: receita total R$ 4.429.491,93 (R$ 4,43 Mi nos cartões), 6.655 vendas, ticket médio R$ 665,59, crescimento de 19,8% (2024 sobre 2023), receita online de 59,3% e efeito de alta temporada de 1,26x.
+
+Para montar o dashboard à mão em vez de abrir o projeto, há ainda: [`powerbi/importar_dados.m`](powerbi/importar_dados.m) e [`powerbi/modelo.tmdl`](powerbi/modelo.tmdl) (scripts para colar no Power BI Desktop), [`powerbi/medidas.dax`](powerbi/medidas.dax) e o passo a passo em [`powerbi/ROTEIRO.md`](powerbi/ROTEIRO.md). A lógica desses scripts é a mesma do projeto, que foi executada no Desktop; a colagem manual dos scripts em si não foi testada lá.
+
+Nota sobre o crescimento: a medida compara o último ano no contexto de filtros com o anterior. Com um filtro de ano em 2023, ela fica em branco (não há 2022 nos dados).
 
 ## Consultas SQL (`sql/consultas.sql`)
 
@@ -123,16 +146,17 @@ Conferi no Python que o modelo exportado preserva os totais (as 6.655 linhas e a
 
 ## Testes
 
-46 testes com `pytest` (nenhum depende de internet), cobrindo:
+59 testes com `pytest` (nenhum depende de internet), cobrindo:
 - reprodutibilidade da geração de dados (mesma seed → mesmo resultado)
 - validade dos dados gerados (datas no período, categorias/produtos válidos, receita consistente)
 - corretude dos cálculos de métricas de negócio usados no relatório
 - análise do IBGE: leitura da resposta da API (amostra real salva), fator sazonal, variações anuais e a requisição mockada
 - modelo estrela do Power BI: totais preservados, chaves sem órfãos, calendário contínuo e formatos de CSV
 - scripts do Power BI (M, TMDL e DAX): nomes de colunas, relacionamentos e medidas consistentes com o modelo exportado
+- gerador do projeto Power BI: JSON válidos, todo campo usado nos visuais existe no modelo, medidas iguais às do `medidas.dax` e saída determinística
 
 ## Próximos passos
 
-- [ ] Montar o dashboard no Power BI Desktop e publicar as capturas (o modelo, as medidas DAX, os scripts M/TMDL e o roteiro já estão prontos em `powerbi/`; falta abrir o Desktop, colar os scripts e montar as páginas)
+- [x] Dashboard interativo em Power BI (projeto `.pbip` em `powerbi/`, com capturas; veja "Dashboard no Power BI")
 - [x] Versão com dados reais de uma API pública (IBGE/PMC, veja "Versão com dados reais")
 - [x] Recalibrar o gerador sintético com a sazonalidade real do IBGE (veja "Recalibração do gerador")

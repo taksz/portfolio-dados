@@ -19,6 +19,7 @@ Os dados vêm do [books.toscrape.com](https://books.toscrape.com), um site públ
 - **Modo automático**: coleta periódica com a biblioteca `schedule`, com log de cada execução (também dá para agendar via cron — veja abaixo).
 - **Alertas**: quando o preço fica abaixo do limite (global ou por produto), grava em `alertas.log` e no log da execução.
 - **Análise**: resumo (menor/maior preço, preço médio, maior queda entre coletas) e gráfico com matplotlib.
+- **Painel web** (`servir`): lista de produtos com busca, gráfico de preço com o limite de alerta, resumo, alertas recentes e botão para coletar na hora, tudo no navegador.
 - **Robustez**: falha de rede não derruba o agendador — o erro é logado e a próxima execução tenta de novo.
 
 ## Estrutura
@@ -32,9 +33,11 @@ rastreador-precos/
 │   ├── coleta.py      # Orquestra: coletar -> salvar -> alertar (+ logs)
 │   ├── agendador.py   # Coleta periódica (schedule)
 │   ├── analise.py     # Resumo estatístico e gráfico (matplotlib)
+│   ├── web.py         # Painel web local (http.server) com API JSON
+│   ├── static/        # Páginas do painel: index.html, style.css, app.js
 │   ├── demo.py        # Histórico SIMULADO, só para demonstrar a análise
 │   └── cli.py         # Interface de linha de comando
-├── tests/             # 37 testes pytest (sem internet: HTTP mockado com `responses`)
+├── tests/             # 49 testes pytest (sem internet: HTTP mockado com `responses`)
 │   └── fixtures/      # HTML real do catálogo, salvo localmente
 ├── imgs/
 └── requirements.txt
@@ -50,6 +53,7 @@ python src/cli.py coletar --limite 20          # uma coleta agora (alerta se pre
 python src/cli.py agendar --intervalo-min 60   # coleta a cada 60 min (Ctrl+C para parar)
 python src/cli.py listar                       # produtos com o último preço
 python src/cli.py analisar "starving hearts"   # resumo + gráfico em imgs/
+python src/cli.py servir --limite 20           # painel web em http://127.0.0.1:8000
 ```
 
 Opções úteis: `--paginas N` (padrão 1 = 20 produtos), `--limites-json arquivo.json` (limites individuais, formato `{"id_do_produto": 15.0}`), `--db`, `--log`, `--alertas`. Use `python src/cli.py <comando> --help` para ver todas.
@@ -130,6 +134,22 @@ Gráfico salvo em: imgs/exemplo_simulado.png
 
 *(Dados simulados — a linha vermelha tracejada é o limite de alerta.)*
 
+## Painel web
+
+`python src/cli.py servir --limite 20` abre um painel em `http://127.0.0.1:8000`, sem instalar nada além do `requirements.txt` (o servidor usa só a biblioteca padrão do Python). Dá para buscar um produto, ver o histórico de preço com a linha do limite de alerta (a zona abaixo dela fica sombreada), conferir o resumo, ler os alertas recentes e clicar em **Coletar agora** para buscar os preços de verdade. O botão de tema alterna entre automático, claro e escuro, e `?produto=<id>` abre direto em um produto.
+
+Painel com dados **reais** (coletas feitas no books.toscrape.com, limite de £20): o preço está abaixo do limite, por isso aparece em vermelho. A linha é reta porque o site é estático.
+
+![Painel web com dados reais](imgs/painel-web-real.png)
+
+Painel com histórico **simulado** (banco `demo.db`, criado por `python src/cli.py demo` e aberto com `servir --db demo.db`), para mostrar como fica quando o preço varia. Estes valores não são reais:
+
+![Painel web com histórico simulado, tema claro](imgs/painel-web.png)
+
+![Painel web com histórico simulado, tema escuro](imgs/painel-web-escuro.png)
+
+> O GitHub só mostra o código e as imagens: o painel precisa ser executado na sua máquina. Ele escuta só em `127.0.0.1` por padrão (use `--host` para mudar, sabendo que não há autenticação).
+
 ## Agendando com cron (Linux/macOS)
 
 Em vez de deixar o `agendar` rodando, dá para chamar `coletar` periodicamente pelo cron. Edite com `crontab -e`:
@@ -170,7 +190,7 @@ ORDER BY h.preco LIMIT 3;
 pytest
 ```
 
-37 testes que **não dependem de internet**: as requisições HTTP são mockadas com a biblioteca `responses`, usando páginas reais do catálogo salvas em `tests/fixtures/`. Cobrem parsing (preço, estoque, paginação), banco, regras de alerta, análise/gráfico, agendador e o fluxo completo da CLI.
+49 testes que **não dependem de internet**: as requisições HTTP são mockadas com a biblioteca `responses`, usando páginas reais do catálogo salvas em `tests/fixtures/`. Cobrem parsing (preço, estoque, paginação), banco, regras de alerta, análise/gráfico, agendador e o fluxo completo da CLI.
 
 ## Tecnologias
 

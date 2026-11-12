@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>Rastreador de preços</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="page">
+  <header class="topo">
+    <span class="marca"><b>£</b> rastreador de preços</span>
+    <button class="tema" id="tema" type="button" aria-label="Alternar tema">Tema automático</button>
+  </header>
+
+  <div class="layout">
+    <aside class="lateral">
+      <div class="topo-painel" style="display:flex;justify-content:space-between;align-items:baseline">
+        <h2>Produtos</h2><span class="suave" id="contagem"></span>
+      </div>
+      <input class="campo" id="busca" type="search" placeholder="Buscar produto pelo nome" aria-label="Buscar produto" autocomplete="off" />
+      <div class="lista" id="lista" role="list"></div>
+      <p style="margin:14px 0 0"><button class="btn primario" id="coletar" type="button">Coletar agora</button></p>
+      <p class="erro" id="erro-coleta" role="alert"></p>
+      <p class="rodape">A coleta acessa books.toscrape.com e grava um novo registro de preço de cada produto.</p>
+    </aside>
+
+    <main>
+      <p class="vazio" id="vazio-detalhe">Escolha um produto na lista para ver o histórico de preços.</p>
+      <div id="detalhe" hidden>
+        <section class="cabeca">
+          <h1 id="nome"></h1>
+          <div class="preco-grande" id="preco"></div>
+          <p class="suave" id="situacao" style="margin:0"></p>
+          <p style="margin:8px 0 0"><a id="link" target="_blank" rel="noopener">Abrir a página do produto</a></p>
+        </section>
+
+        <div class="faixa">
+          <div><div class="n" id="n-menor"></div><div class="l">Menor preço visto</div><div class="d" id="d-menor"></div></div>
+          <div><div class="n" id="n-maior"></div><div class="l">Maior preço visto</div><div class="d" id="d-maior"></div></div>
+          <div><div class="n" id="n-medio"></div><div class="l">Preço médio</div><div class="d" id="d-medio"></div></div>
+          <div><div class="n" id="n-queda"></div><div class="l">Maior queda entre coletas</div><div class="d" id="d-queda"></div></div>
+        </div>
+
+        <section class="painel">
+          <div class="topo-painel">
+            <h2>Evolução do preço</h2>
+            <label class="limite-form">Limite de alerta (£)
+              <input class="campo" id="limite" type="text" inputmode="decimal" placeholder="ex.: 20" />
+            </label>
+          </div>
+          <div id="grafico"></div>
+        </section>
+      </div>
+
+      <section class="painel">
+        <div class="topo-painel"><h2>Alertas recentes</h2><span class="suave" id="n-alertas"></span></div>
+        <div id="alertas"></div>
+      </section>
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -79,6 +79,24 @@ def buscar_produto(conn: sqlite3.Connection, termo: str) -> Optional[sqlite3.Row
     ).fetchone()
 
 
+def listar_com_resumo(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """Cada produto com último preço, preço inicial, menor preço e número de coletas."""
+    return conn.execute(
+        """
+        SELECT p.id, p.nome, h.preco, h.disponivel, h.coletado_em,
+               (SELECT COUNT(*) FROM historico_precos WHERE produto_id = p.id) AS coletas,
+               (SELECT preco FROM historico_precos WHERE produto_id = p.id
+                  ORDER BY coletado_em, id LIMIT 1) AS preco_inicial,
+               (SELECT MIN(preco) FROM historico_precos WHERE produto_id = p.id) AS menor_preco
+        FROM produtos p
+        JOIN historico_precos h ON h.id = (
+            SELECT id FROM historico_precos WHERE produto_id = p.id ORDER BY coletado_em DESC, id DESC LIMIT 1
+        )
+        ORDER BY p.nome
+        """
+    ).fetchall()
+
+
 def listar_produtos(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     """Cada produto com o último preço registrado."""
     return conn.execute(

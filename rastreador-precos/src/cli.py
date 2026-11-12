@@ -51,6 +51,14 @@ def montar_parser() -> argparse.ArgumentParser:
     an.add_argument("--grafico", help="caminho do PNG de saída (padrão: imgs/<id>.png)")
     an.add_argument("--limite", type=float, help="desenha a linha do limite de alerta no gráfico")
 
+    sv = sub.add_parser("servir", help="abre o painel web no navegador (http://127.0.0.1:8000)")
+    sv.add_argument("--db", default=str(banco.DB_PADRAO))
+    sv.add_argument("--porta", type=int, default=8000)
+    sv.add_argument("--host", default="127.0.0.1", help="endereço de escuta (padrão: só esta máquina)")
+    sv.add_argument("--limite", type=float, help="limite de alerta padrão do painel (£)")
+    sv.add_argument("--alertas", default=str(alertas.ARQUIVO_ALERTAS), help="arquivo de alertas")
+    sv.add_argument("--log", default=str(RAIZ / "rastreador.log"), help="arquivo de log")
+
     dm = sub.add_parser("demo", help="cria um banco SIMULADO (demo.db) para demonstrar a análise")
     dm.add_argument("--db", default=str(RAIZ / "demo.db"))
     dm.add_argument("--snapshots", type=int, default=10)
@@ -114,7 +122,23 @@ def _cmd_demo(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_servir(a: argparse.Namespace) -> int:
+    import web
+
+    coleta.configurar_logs(a.log)
+    servidor = web.criar_servidor(a.db, a.alertas, a.host, a.porta, a.limite)
+    print(f"Painel em http://{a.host}:{servidor.server_address[1]}  (Ctrl+C para parar)")
+    try:
+        servidor.serve_forever()
+    except KeyboardInterrupt:
+        print("\nServidor encerrado.")
+    finally:
+        servidor.server_close()
+    return 0
+
+
 COMANDOS = {
+    "servir": _cmd_servir,
     "coletar": _cmd_coletar,
     "agendar": _cmd_agendar,
     "listar": _cmd_listar,

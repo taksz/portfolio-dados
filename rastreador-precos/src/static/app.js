@@ -81,7 +81,11 @@ function desenharLista() {
     caixa.append(b);
   }
   const atual = caixa.querySelector('[aria-current="true"]');
-  if (atual) atual.scrollIntoView({ block: "nearest" });
+  if (atual) {
+    // Rola só a lista (scrollIntoView arrastaria a página inteira em telas pequenas).
+    const r = atual.getBoundingClientRect(), c = caixa.getBoundingClientRect();
+    if (r.top < c.top || r.bottom > c.bottom) caixa.scrollTop += r.top - c.top - (c.height - r.height) / 2;
+  }
 }
 
 async function escolher(id) {

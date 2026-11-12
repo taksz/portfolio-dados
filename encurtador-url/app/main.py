@@ -2,10 +2,11 @@
 API do encurtador de URL com analytics.
 
 Endpoints:
-    POST /api/shorten          -> cria uma URL curta
+    GET  /                     -> página inicial: encurtar links e ver a lista
+    POST /api/shorten         -> cria uma URL curta
     GET  /api/urls             -> lista as URLs já criadas (com total de cliques)
     GET  /api/analytics/{code} -> estatísticas de cliques de um código
-    GET  /dashboard/{code}     -> página HTML simples com o analytics
+    GET  /dashboard/{code}     -> painel HTML com o analytics do link
     GET  /{code}               -> redireciona para a URL original e registra o clique
 
 Rodar localmente:
@@ -20,6 +21,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import models
@@ -39,6 +41,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Encurtador de URL com Analytics", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def pagina_inicial():
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 class EncurtarRequest(BaseModel):

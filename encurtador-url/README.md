@@ -7,14 +7,15 @@
   <img src="https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat&logo=pytest&logoColor=white" alt="pytest" />
 </p>
 
-API em Python (FastAPI) que encurta URLs e registra **analytics de cada clique**: quantidade de acessos, visitantes únicos (aproximado), navegador, sistema operacional e origem (referrer) — com um dashboard HTML simples para visualizar tudo.
+API em Python (FastAPI) que encurta URLs e registra **analytics de cada clique**: quantidade de acessos, visitantes únicos (aproximado), navegador, sistema operacional e origem (referrer) — com uma interface web para encurtar links e um painel de cliques.
 
 ## Funcionalidades
 
 - **Encurtar URL** — gera um código curto em base62 (6 caracteres, ex.: `c30gsM`).
 - **Redirecionamento** — `GET /{codigo}` redireciona (302) para a URL original e registra o clique.
 - **Analytics por link**: total de cliques, visitantes únicos aproximados, cliques por dia, navegador, sistema operacional e top referrers.
-- **Dashboard HTML** (`/dashboard/{codigo}`) — visualização simples em gráficos de barra, sem depender de nenhuma biblioteca de gráficos externa (JS puro).
+- **Página inicial** (`/`) — cola a URL, copia o link curto e vê a lista de todos os links com o total de cliques.
+- **Painel de cliques** (`/dashboard/{codigo}`) — gráfico de cliques por dia e rankings de navegadores, sistemas e origens, com tema claro/escuro automático e atualização a cada 5 segundos. JavaScript puro, sem biblioteca de gráficos.
 - **Privacidade por padrão**: o IP do visitante nunca é armazenado em texto puro — só o hash SHA-256 dele, usado apenas para estimar visitantes únicos.
 
 ## Estrutura
@@ -26,9 +27,14 @@ encurtador-url/
 │   ├── models.py         # Acesso a dados (SQLite): criar URL, registrar clique, estatísticas
 │   ├── shortener.py      # Geração de código base62 + validação de URL
 │   ├── user_agent.py     # Parser simples (regex) de navegador/SO a partir do User-Agent
+│   ├── demo.py           # Popula o banco com links e cliques SIMULADOS (só para demonstração)
 │   └── static/
-│       └── dashboard.html
-├── tests/                # 36 testes pytest
+│       ├── index.html    # Página inicial (encurtar + lista de links)
+│       ├── dashboard.html  # Painel de cliques de um link
+│       ├── style.css     # Estilos compartilhados (claro/escuro)
+│       └── app.js        # Funções compartilhadas das páginas
+├── imgs/                 # Capturas de tela da interface
+├── tests/                # 43 testes pytest
 └── requirements.txt
 ```
 
@@ -72,9 +78,26 @@ Saída real do passo 3, após 2 cliques (um vindo de `google.com`, outro direto,
 }
 ```
 
-Ou abra `http://127.0.0.1:8000/dashboard/c30gsM` no navegador para ver o mesmo resultado em gráficos de barra.
+Ou abra `http://127.0.0.1:8000/dashboard/c30gsM` no navegador para ver o mesmo resultado em gráficos.
 
 Também dá para explorar e testar todos os endpoints pela documentação interativa automática do FastAPI, em `http://127.0.0.1:8000/docs`.
+
+## Interface
+
+Depois de subir o servidor, abra `http://127.0.0.1:8000/` no navegador. Dá para encurtar links, copiar o link curto e abrir o painel de cada um sem digitar nenhum comando.
+
+> O GitHub só mostra o código e as imagens: a API é um servidor Python e precisa ser executada na sua máquina (veja "Como executar"). As capturas abaixo vêm da própria interface rodando.
+
+![Página inicial do encurtador](imgs/pagina-inicial.png)
+
+![Painel de cliques de um link](imgs/painel.png)
+
+**Os cliques das capturas são simulados.** Um projeto recém-clonado não tem cliques, então o comando abaixo cria 3 links (`demo-docs`, `demo-portfolio` e `demo-dados`) com 14 dias de cliques pseudoaleatórios (semente fixa). Os dados não são reais:
+
+```bash
+python -m app.demo           # cria os links de demonstração
+python -m app.demo --limpar  # remove só os links de demonstração
+```
 
 ## Modelo de dados (SQLite)
 
@@ -85,7 +108,7 @@ cliques(id, url_id, clicado_em, referrer, navegador, sistema_operacional, ip_has
 
 ## Testes
 
-36 testes com `pytest`, cobrindo geração/validação de código, parser de User-Agent, camada de dados (SQLite em memória) e a API de ponta a ponta (com `TestClient` do FastAPI):
+43 testes com `pytest`, cobrindo geração/validação de código, parser de User-Agent, camada de dados (SQLite em memória) e a API de ponta a ponta (com `TestClient` do FastAPI):
 
 ```bash
 pytest tests/ -v

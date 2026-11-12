@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>Encurtador de URL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="page">
+  <header class="topo">
+    <a class="marca" href="/"><b>/</b>encurtador</a>
+    <nav>
+      <a href="/docs">Documentação da API</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Encurte um link e veja quem clica.</h1>
+      <p>Cole uma URL, copie o link curto e acompanhe no painel os cliques por dia, navegador, sistema e origem de cada visita.</p>
+
+      <form class="form-encurtar" id="form" novalidate>
+        <input class="campo" id="url" type="url" inputmode="url" autocomplete="off"
+               placeholder="https://exemplo.com/um-endereco-bem-longo" aria-label="URL para encurtar" required />
+        <button class="btn primario" id="enviar" type="submit">Encurtar link</button>
+      </form>
+      <p class="erro" id="erro" role="alert"></p>
+
+      <div class="resultado" id="resultado" hidden>
+        <p class="rotulo">Seu link curto</p>
+        <p class="curta" id="curta"></p>
+        <div class="acoes">
+          <button class="btn primario" id="copiar" type="button">Copiar link</button>
+          <a class="btn" id="abrir" target="_blank" rel="noopener">Abrir link</a>
+          <a class="btn" id="painel">Ver painel</a>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="titulo-lista">
+      <div class="lista-titulo">
+        <h2 id="titulo-lista">Seus links</h2>
+        <span class="suave" id="contagem"></span>
+      </div>
+      <div class="links" id="links"></div>
+    </section>
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const form = document.getElementById("form");
+const campo = document.getElementById("url");
+const botao = document.getElementById("enviar");
+const erro = document.getElementById("erro");
+let ultimaCurta = "";
+
+async function carregarLinks() {
+  const caixa = document.getElementById("links");
+  const resp = await fetch("/api/urls");
+  const urls = await resp.json();
+  document.getElementById("contagem").textContent =
+    urls.length === 1 ? "1 link" : `${urls.length} links`;
+  caixa.replaceChildren();
+  if (!urls.length) {
+    caixa.append(el("p", { class: "vazio", text: "Nenhum link ainda. Cole uma URL acima para criar o primeiro." }));
+    return;
+  }
+  for (const u of urls) {
+    caixa.append(
+      el("div", { class: "link-linha" },
+        el("a", { class: "cod", href: `/dashboard/${u.codigo}`, text: `/${u.codigo}` }),
+        el("span", { class: "destino", title: u.url_original, text: u.url_original }),
+        el("span", { class: "cliques" }, String(u.total_cliques), el("small", { text: u.total_cliques === 1 ? " clique" : " cliques" })),
+        el("a", { class: "ver", href: `/dashboard/${u.codigo}`, text: "Ver painel" })
+      )
+    );
+  }
+}
+
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  erro.textContent = "";
+  const url = campo.value.trim();
+  if (!url) { erro.textContent = "Cole uma URL para encurtar."; campo.focus(); return; }
+  botao.disabled = true;
+  try {
+    const resp = await fetch("/api/shorten", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const dados = await resp.json();
+    if (!resp.ok) {
+      erro.textContent = typeof dados.detail === "string" ? dados.detail : "URL inválida. Use http:// ou https://.";
+      return;
+    }
+    ultimaCurta = dados.url_curta;
+    document.getElementById("curta").textContent = dados.url_curta;
+    document.getElementById("abrir").href = dados.url_curta;
+    document.getElementById("painel").href = `/dashboard/${dados.codigo}`;
+    document.getElementById("resultado").hidden = false;
+    campo.value = "";
+    await carregarLinks();
+  } catch (_) {
+    erro.textContent = "Não foi possível falar com o servidor. Verifique se ele está rodando.";
+  } finally {
+    botao.disabled = false;
+  }
+});
+
+document.getElementById("copiar").addEventListener("click", () => copiar(ultimaCurta));
+carregarLinks();
+</script>
+</body>
+</html>

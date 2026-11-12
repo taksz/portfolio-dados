@@ -74,3 +74,23 @@ def test_dashboard_existe_para_codigo_valido(client):
 def test_dashboard_404_para_codigo_invalido(client):
     resp = client.get("/dashboard/naoexiste")
     assert resp.status_code == 404
+
+
+def test_pagina_inicial_e_servida(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "Encurtar link" in resp.text
+
+
+def test_arquivos_estaticos_sao_servidos(client):
+    css = client.get("/static/style.css")
+    js = client.get("/static/app.js")
+    assert css.status_code == 200 and "text/css" in css.headers["content-type"]
+    assert js.status_code == 200 and "javascript" in js.headers["content-type"]
+
+
+def test_pagina_inicial_nao_conflita_com_redirecionamento(client):
+    codigo = client.post("/api/shorten", json={"url": "https://exemplo.com"}).json()["codigo"]
+    assert client.get("/", follow_redirects=False).status_code == 200
+    assert client.get(f"/{codigo}", follow_redirects=False).status_code == 302

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Bancos gerados pelas execuções (histórico real e demo simulado)
+*.db
+# Logs gerados pelas execuções
+*.log

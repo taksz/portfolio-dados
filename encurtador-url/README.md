@@ -1,4 +1,4 @@
-# 🔗 Encurtador de URL com Analytics
+# Encurtador de URL com Analytics
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat&logo=python&logoColor=white" alt="Python 3.9+" />
@@ -9,15 +9,15 @@
 
 API em Python (FastAPI) que encurta URLs e registra **analytics de cada clique**: quantidade de acessos, visitantes únicos (aproximado), navegador, sistema operacional e origem (referrer) — com um dashboard HTML simples para visualizar tudo.
 
-## ⚙️ Funcionalidades
+## Funcionalidades
 
-- 🔗 **Encurtar URL** — gera um código curto em base62 (6 caracteres, ex.: `c30gsM`).
-- ↪️ **Redirecionamento** — `GET /{codigo}` redireciona (302) para a URL original e registra o clique.
-- 📊 **Analytics por link**: total de cliques, visitantes únicos aproximados, cliques por dia, navegador, sistema operacional e top referrers.
-- 🖥️ **Dashboard HTML** (`/dashboard/{codigo}`) — visualização simples em gráficos de barra, sem depender de nenhuma biblioteca de gráficos externa (JS puro).
-- 🔒 **Privacidade por padrão**: o IP do visitante nunca é armazenado em texto puro — só o hash SHA-256 dele, usado apenas para estimar visitantes únicos.
+- **Encurtar URL** — gera um código curto em base62 (6 caracteres, ex.: `c30gsM`).
+- **Redirecionamento** — `GET /{codigo}` redireciona (302) para a URL original e registra o clique.
+- **Analytics por link**: total de cliques, visitantes únicos aproximados, cliques por dia, navegador, sistema operacional e top referrers.
+- **Dashboard HTML** (`/dashboard/{codigo}`) — visualização simples em gráficos de barra, sem depender de nenhuma biblioteca de gráficos externa (JS puro).
+- **Privacidade por padrão**: o IP do visitante nunca é armazenado em texto puro — só o hash SHA-256 dele, usado apenas para estimar visitantes únicos.
 
-## 📁 Estrutura
+## Estrutura
 
 ```
 encurtador-url/
@@ -32,7 +32,7 @@ encurtador-url/
 └── requirements.txt
 ```
 
-## 🚀 Como executar
+## Como executar
 
 ```bash
 pip install -r requirements.txt
@@ -76,14 +76,14 @@ Ou abra `http://127.0.0.1:8000/dashboard/c30gsM` no navegador para ver o mesmo r
 
 Também dá para explorar e testar todos os endpoints pela documentação interativa automática do FastAPI, em `http://127.0.0.1:8000/docs`.
 
-## 🧮 Modelo de dados (SQLite)
+## Modelo de dados (SQLite)
 
 ```
 urls(id, codigo, url_original, criado_em)
 cliques(id, url_id, clicado_em, referrer, navegador, sistema_operacional, ip_hash)
 ```
 
-## 🧪 Testes
+## Testes
 
 36 testes com `pytest`, cobrindo geração/validação de código, parser de User-Agent, camada de dados (SQLite em memória) e a API de ponta a ponta (com `TestClient` do FastAPI):
 
@@ -91,7 +91,7 @@ cliques(id, url_id, clicado_em, referrer, navegador, sistema_operacional, ip_has
 pytest tests/ -v
 ```
 
-## 🚧 Próximos passos
+## Próximos passos
 
 - [ ] Autenticação simples para o dashboard (hoje qualquer um com o código vê o analytics)
 - [ ] Expiração/desativação de links

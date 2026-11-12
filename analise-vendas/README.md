@@ -1,4 +1,4 @@
-# 📊 Análise de Vendas de E-commerce (Python + SQL)
+# Análise de Vendas de E-commerce (Python + SQL)
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat&logo=python&logoColor=white" alt="Python 3.9+" />
@@ -11,7 +11,7 @@ Projeto de análise de dados de ponta a ponta: geração de um dataset sintétic
 
 > **Por que dados sintéticos?** Para um projeto público, gerar os próprios dados (com seed fixa, em `src/gerar_dados.py`) evita problemas de licença/privacidade de datasets de terceiros e permite controlar propositalmente padrões realistas (sazonalidade de Black Friday/Natal, crescimento do canal online) para a análise ter algo relevante a descobrir.
 
-## 📁 Estrutura
+## Estrutura
 
 ```
 analise-vendas/
@@ -26,7 +26,7 @@ analise-vendas/
 └── requirements.txt
 ```
 
-## 🚀 Como reproduzir
+## Como reproduzir
 
 ```bash
 pip install -r requirements.txt
@@ -40,7 +40,7 @@ pytest tests/ -v                # 13 testes
 
 As consultas de `sql/consultas.sql` podem ser rodadas com qualquer cliente SQLite sobre `data/vendas.db`.
 
-## 📈 Principais achados
+## Principais achados
 
 *(números reais, gerados pela execução de `src/analise.py` sobre os dados sintéticos de `src/gerar_dados.py`)*
 
@@ -69,7 +69,7 @@ Os dois picos (novembro de 2023 e de 2024) confirmam visualmente o efeito de alt
 
 ![Receita por canal](imgs/receita_por_canal.png)
 
-## 🧮 Consultas SQL (`sql/consultas.sql`)
+## Consultas SQL (`sql/consultas.sql`)
 
 8 consultas de negócio, entre elas:
 
@@ -82,14 +82,14 @@ Os dois picos (novembro de 2023 e de 2024) confirmam visualmente o efeito de alt
 7. Categoria líder em cada região (usando `RANK() OVER (PARTITION BY ...)`)
 8. Crescimento ano a ano da receita total
 
-## 🧪 Testes
+## Testes
 
 13 testes com `pytest`, cobrindo:
 - reprodutibilidade da geração de dados (mesma seed → mesmo resultado)
 - validade dos dados gerados (datas no período, categorias/produtos válidos, receita consistente)
 - corretude dos cálculos de métricas de negócio usados no relatório
 
-## 🚧 Próximos passos
+## Próximos passos
 
 - [ ] Dashboard interativo em Power BI a partir de `data/vendas.csv`
 - [ ] Versão com dados reais de uma API pública (ex.: IBGE, dados.gov.br)

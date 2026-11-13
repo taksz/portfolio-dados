@@ -73,7 +73,7 @@ def test_nao_serve_arquivos_fora_da_pasta_static(servidor):
 
 
 def test_config(servidor):
-    assert json.loads(get(servidor + "/api/config")[2]) == {"limite": 15.0, "paginas": 1}
+    assert json.loads(get(servidor + "/api/config")[2]) == {"limite": 15.0, "paginas": 1, "somente_leitura": False, "demo": False}
 
 
 def test_lista_de_produtos_com_resumo(servidor):

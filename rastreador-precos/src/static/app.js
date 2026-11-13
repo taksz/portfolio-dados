@@ -220,6 +220,13 @@ async function iniciar() {
   });
   const cfg = await (await fetch("/api/config")).json();
   limite = cfg.limite;
+  if (cfg.demo) $("tag-demo").hidden = false;
+  if (cfg.somente_leitura) {
+    // Hospedagem pública: sem botão de coleta (evita visitantes acionarem o site de terceiros).
+    $("bloco-coleta").hidden = true;
+    $("nota-coleta").textContent =
+      "Demonstração somente leitura: os preços são simulados a partir dos 20 livros reais da primeira página do catálogo, e a coleta no site real está desligada aqui. Para coletar de verdade, rode o projeto na sua máquina.";
+  }
   $("limite").value = limite ?? "";
   $("limite").addEventListener("input", () => {
     const v = parseFloat($("limite").value.replace(",", "."));

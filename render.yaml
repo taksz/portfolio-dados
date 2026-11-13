@@ -1,4 +1,5 @@
-# Blueprint do Render (https://render.com) para publicar o encurtador-url.
+# Blueprint do Render (https://render.com) para publicar os projetos web do repositório:
+# encurtador-url e rastreador-precos (painel em modo demonstração, somente leitura).
 # O repositório é um monorepo: rootDir aponta para a pasta do projeto.
 services:
   - type: web
@@ -18,3 +19,17 @@ services:
       # Para uso real, adicione ENCURTADOR_SENHA em Environment no painel do Render.
       - key: ENCURTADOR_DEMO
         value: "1"
+
+  - type: web
+    name: rastreador-precos
+    runtime: python
+    plan: free
+    rootDir: rastreador-precos
+    buildCommand: pip install -r requirements.txt
+    # --demo: se o banco estiver vazio, cria histórico SIMULADO sem acessar a internet.
+    # --somente-leitura: desliga a coleta (visitantes não podem acionar o site de terceiros).
+    startCommand: python src/cli.py servir --host 0.0.0.0 --porta $PORT --limite 25 --somente-leitura --demo
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10

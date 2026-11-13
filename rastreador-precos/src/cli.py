@@ -58,6 +58,10 @@ def montar_parser() -> argparse.ArgumentParser:
     sv.add_argument("--limite", type=float, help="limite de alerta padrão do painel (£)")
     sv.add_argument("--alertas", default=str(alertas.ARQUIVO_ALERTAS), help="arquivo de alertas")
     sv.add_argument("--log", default=str(RAIZ / "rastreador.log"), help="arquivo de log")
+    sv.add_argument("--somente-leitura", action="store_true",
+                    help="desliga o botão e a rota de coleta (use em hospedagem pública)")
+    sv.add_argument("--demo", action="store_true",
+                    help="se o banco estiver vazio, cria histórico SIMULADO (sem internet) e mostra o aviso no painel")
 
     dm = sub.add_parser("demo", help="cria um banco SIMULADO (demo.db) para demonstrar a análise")
     dm.add_argument("--db", default=str(RAIZ / "demo.db"))
@@ -126,7 +130,14 @@ def _cmd_servir(a: argparse.Namespace) -> int:
     import web
 
     coleta.configurar_logs(a.log)
-    servidor = web.criar_servidor(a.db, a.alertas, a.host, a.porta, a.limite)
+    if a.demo:
+        import demo
+
+        if demo.preparar_demonstracao(a.db, a.alertas, a.limite):
+            print("Banco vazio: histórico SIMULADO de demonstração criado (sem acessar a internet).")
+    servidor = web.criar_servidor(
+        a.db, a.alertas, a.host, a.porta, a.limite, somente_leitura=a.somente_leitura, demo=a.demo
+    )
     print(f"Painel em http://{a.host}:{servidor.server_address[1]}  (Ctrl+C para parar)")
     try:
         servidor.serve_forever()

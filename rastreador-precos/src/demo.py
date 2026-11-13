@@ -12,8 +12,13 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import alertas
 import banco
+import scraper
 from scraper import Produto
+
+# Os 20 produtos reais da 1ª página do catálogo, salvos em HTML (usados também pelos testes).
+CATALOGO_OFFLINE = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "catalogo_pagina1.html"
 
 
 def gerar_historico_simulado(
@@ -35,3 +40,39 @@ def gerar_historico_simulado(
     finally:
         conn.close()
     return snapshots * len(base)
+
+
+def base_offline() -> list[Produto]:
+    """Produtos reais do catálogo lidos do HTML salvo: funciona sem internet."""
+    produtos, _ = scraper.parse_catalogo(CATALOGO_OFFLINE.read_text(encoding="utf-8"))
+    return produtos
+
+
+def preparar_demonstracao(db: Path | str, arquivo_alertas: Path | str, limite: float | None = None) -> bool:
+    """Cria histórico SIMULADO (e alertas de exemplo) se o banco estiver vazio.
+
+    Serve para uma hospedagem pública abrir sempre com dados, já que o disco do plano
+    grátis é apagado a cada reinício. Devolve True se criou, False se já havia dados.
+    """
+    conn = banco.conectar(db)
+    try:
+        vazio = not banco.listar_produtos(conn)
+    finally:
+        conn.close()
+    if not vazio:
+        return False
+
+    gerar_historico_simulado(base_offline(), db)
+
+    if limite is not None:
+        conn = banco.conectar(db)
+        try:
+            produtos, anteriores = [], {}
+            for p in banco.listar_com_resumo(conn):
+                historico = banco.historico(conn, p["id"])
+                anteriores[p["id"]] = historico[-2]["preco"] if len(historico) > 1 else None
+                produtos.append(Produto(p["id"], p["nome"], p["preco"], bool(p["disponivel"]), ""))
+        finally:
+            conn.close()
+        alertas.registrar(alertas.verificar(produtos, limite, anteriores), arquivo_alertas)
+    return True

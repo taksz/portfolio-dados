@@ -22,8 +22,10 @@ class Alerta:
 
     def mensagem(self) -> str:
         base = f"{self.nome} está por £{self.preco:.2f} (limite £{self.limite:.2f})"
-        if self.preco_anterior is not None and self.preco_anterior != self.preco:
+        if self.preco_anterior is not None and self.preco_anterior > self.preco:
             base += f" — antes £{self.preco_anterior:.2f}"
+        elif self.preco_anterior is not None and self.preco_anterior < self.preco:
+            base += f" — subiu de £{self.preco_anterior:.2f}, mas continua abaixo do limite"
         return base
 
 

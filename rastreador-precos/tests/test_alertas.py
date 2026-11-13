@@ -56,3 +56,14 @@ def test_carregar_limites(tmp_path):
     f = tmp_path / "limites.json"
     f.write_text(json.dumps({"a": "12.5", "b": 7}), encoding="utf-8")
     assert alertas.carregar_limites(f) == {"a": 12.5, "b": 7.0}
+
+
+def test_mensagem_quando_o_preco_subiu_mas_continua_abaixo_do_limite():
+    r = alertas.verificar([p("a", 9.0)], 10.0, {"a": 7.5})
+    msg = r[0].mensagem()
+    assert "subiu de £7.50" in msg and "continua abaixo do limite" in msg and "antes" not in msg
+
+
+def test_mensagem_sem_mudanca_de_preco_nao_cita_o_anterior():
+    msg = alertas.verificar([p("a", 8.0)], 10.0, {"a": 8.0})[0].mensagem()
+    assert "antes" not in msg and "subiu" not in msg

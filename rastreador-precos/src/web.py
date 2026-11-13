@@ -3,11 +3,13 @@
 Usa só a biblioteca padrão (http.server). Rotas:
     GET  /                      painel (HTML)
     GET  /static/<arquivo>      CSS e JavaScript do painel
-    GET  /api/config            limite de alerta e páginas padrão
+    GET  /healthz               verificação de saúde da hospedagem (pública)
+    GET  /api/config            limite de alerta, páginas padrão e modos (somente leitura, demo)
     GET  /api/produtos          produtos com último preço e variação
     GET  /api/produto/<id>      histórico de preços + resumo estatístico
     GET  /api/alertas           alertas mais recentes (lidos de alertas.log)
-    POST /api/coletar           roda uma coleta agora (acessa o site de verdade)
+    POST /api/coletar           roda uma coleta agora (acessa o site de verdade);
+                                responde 403 se o servidor está em modo somente leitura
 """
 from __future__ import annotations
 
@@ -50,6 +52,8 @@ class _Handler(BaseHTTPRequestHandler):
     arquivo_alertas: str = ""
     limite: Optional[float] = None
     paginas: int = 1
+    somente_leitura: bool = False  # hospedagem pública: não deixa visitantes dispararem coletas
+    demo: bool = False  # os dados exibidos são simulados
 
     # --- utilidades -------------------------------------------------------
     def log_message(self, formato, *args):  # silencia o log padrão de acesso
@@ -87,8 +91,12 @@ class _Handler(BaseHTTPRequestHandler):
             return self._arquivo(STATIC_DIR / "index.html")
         if caminho.startswith("/static/"):
             return self._arquivo(STATIC_DIR / caminho[len("/static/"):])
+        if caminho == "/healthz":  # verificação de saúde da hospedagem (não expõe dados)
+            return self._json({"status": "ok"})
         if caminho == "/api/config":
-            return self._json({"limite": self.limite, "paginas": self.paginas})
+            return self._json(
+                {"limite": self.limite, "paginas": self.paginas, "somente_leitura": self.somente_leitura, "demo": self.demo}
+            )
         if caminho == "/api/alertas":
             return self._json(ler_alertas(self.arquivo_alertas))
         if caminho == "/api/produtos":
@@ -123,6 +131,8 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         if urlparse(self.path).path != "/api/coletar":
             return self._erro(404, "Rota não encontrada.")
+        if self.somente_leitura:
+            return self._erro(403, "Esta demonstração é somente leitura: a coleta está desligada.")
         tamanho = int(self.headers.get("Content-Length") or 0)
         try:
             corpo = json.loads(self.rfile.read(tamanho) or b"{}")
@@ -147,6 +157,8 @@ def criar_servidor(
     porta: int = 8000,
     limite: Optional[float] = None,
     paginas: int = 1,
+    somente_leitura: bool = False,
+    demo: bool = False,
 ) -> ThreadingHTTPServer:
     """Cria (sem iniciar) o servidor. Use porta=0 para o sistema escolher uma porta livre."""
     banco.conectar(db).close()  # garante que o banco e as tabelas existam
@@ -158,4 +170,6 @@ def criar_servidor(
     Handler.arquivo_alertas = str(arquivo_alertas)
     Handler.limite = limite
     Handler.paginas = paginas
+    Handler.somente_leitura = somente_leitura
+    Handler.demo = demo
     return ThreadingHTTPServer((host, porta), Handler)

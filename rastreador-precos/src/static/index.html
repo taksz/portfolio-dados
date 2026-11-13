@@ -13,7 +13,7 @@
 <body>
 <div class="page">
   <header class="topo">
-    <span class="marca"><b>£</b> rastreador de preços</span>
+    <span class="marca"><b>£</b> rastreador de preços <span class="tag-demo" id="tag-demo" hidden>dados simulados</span></span>
     <button class="tema" id="tema" type="button" aria-label="Alternar tema">Tema automático</button>
   </header>
 
@@ -24,9 +24,9 @@
       </div>
       <input class="campo" id="busca" type="search" placeholder="Buscar produto pelo nome" aria-label="Buscar produto" autocomplete="off" />
       <div class="lista" id="lista" role="list"></div>
-      <p style="margin:14px 0 0"><button class="btn primario" id="coletar" type="button">Coletar agora</button></p>
+      <p style="margin:14px 0 0" id="bloco-coleta"><button class="btn primario" id="coletar" type="button">Coletar agora</button></p>
       <p class="erro" id="erro-coleta" role="alert"></p>
-      <p class="rodape">A coleta acessa books.toscrape.com e grava um novo registro de preço de cada produto.</p>
+      <p class="rodape" id="nota-coleta">A coleta acessa books.toscrape.com e grava um novo registro de preço de cada produto.</p>
     </aside>
 
     <main>

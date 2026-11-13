@@ -37,7 +37,7 @@ rastreador-precos/
 │   ├── static/        # Páginas do painel: index.html, style.css, app.js
 │   ├── demo.py        # Histórico SIMULADO, só para demonstrar a análise
 │   └── cli.py         # Interface de linha de comando
-├── tests/             # 49 testes pytest (sem internet: HTTP mockado com `responses`)
+├── tests/             # 63 testes pytest (sem internet: HTTP mockado com `responses`)
 │   └── fixtures/      # HTML real do catálogo, salvo localmente
 ├── imgs/
 └── requirements.txt
@@ -150,6 +150,26 @@ Painel com histórico **simulado** (banco `demo.db`, criado por `python src/cli.
 
 > O GitHub só mostra o código e as imagens: o painel precisa ser executado na sua máquina. Ele escuta só em `127.0.0.1` por padrão (use `--host` para mudar, sabendo que não há autenticação).
 
+## Publicar o painel online (Render)
+
+O painel também pode rodar na internet, em modo **demonstração somente leitura**. O repositório já traz o serviço `rastreador-precos` no `render.yaml` da raiz, que sobe o servidor assim:
+
+```bash
+python src/cli.py servir --host 0.0.0.0 --porta $PORT --limite 25 --somente-leitura --demo
+```
+
+| Opção | O que faz |
+|---|---|
+| `--host 0.0.0.0` | Aceita visitas de fora da máquina (necessário em hospedagem). |
+| `--somente-leitura` | Desliga o botão e a rota **Coletar agora** (responde 403). Sem isso, qualquer visitante poderia disparar coletas no site books.toscrape.com e encher o banco. |
+| `--demo` | Se o banco estiver vazio, cria um histórico **simulado** de 10 coletas dos 20 livros reais da primeira página do catálogo, **sem acessar a internet** (usa o HTML salvo em `tests/fixtures/`), e mostra a etiqueta "dados simulados" no topo do painel. |
+
+![Painel em modo demonstração pública](imgs/painel-demo-publica.png)
+
+O servidor também responde `GET /healthz` (público, sem dados), que a hospedagem usa para saber se o app está de pé.
+
+Na demonstração pública, os preços e os alertas de exemplo são simulados e a coleta automática periódica não roda (um serviço grátis "dorme" quando ninguém acessa). A coleta real, o agendador e o botão **Coletar agora** funcionam rodando o projeto na sua máquina, como descrito acima. O plano grátis do Render apaga o disco a cada reinício, por isso a demonstração recria os dados simulados quando sobe. Para publicar, o procedimento é o mesmo do encurtador: **New > Blueprint** no Render, escolhendo este repositório.
+
 ## Agendando com cron (Linux/macOS)
 
 Em vez de deixar o `agendar` rodando, dá para chamar `coletar` periodicamente pelo cron. Edite com `crontab -e`:
@@ -190,7 +210,7 @@ ORDER BY h.preco LIMIT 3;
 pytest
 ```
 
-49 testes que **não dependem de internet**: as requisições HTTP são mockadas com a biblioteca `responses`, usando páginas reais do catálogo salvas em `tests/fixtures/`. Cobrem parsing (preço, estoque, paginação), banco, regras de alerta, análise/gráfico, agendador e o fluxo completo da CLI.
+63 testes que **não dependem de internet**: as requisições HTTP são mockadas com a biblioteca `responses`, usando páginas reais do catálogo salvas em `tests/fixtures/`. Cobrem parsing (preço, estoque, paginação), banco, regras de alerta, análise/gráfico, agendador e o fluxo completo da CLI.
 
 ## Tecnologias
 

@@ -12,6 +12,8 @@ Robô de automação em Python que **monitora o preço de produtos ao longo do t
 
 Os dados vêm do [books.toscrape.com](https://books.toscrape.com), um site público feito para praticar scraping.
 
+**Demonstração ao vivo do painel:** [rastreador-precos-4zyj.onrender.com](https://rastreador-precos-4zyj.onrender.com). É uma demonstração pública, somente leitura, com dados **simulados** a partir dos 20 livros reais da primeira página do catálogo: o botão de coleta e a coleta automática ficam desligados na nuvem. No plano grátis do Render a primeira visita pode levar cerca de um minuto (o serviço "dorme" quando ninguém acessa).
+
 ## Funcionalidades
 
 - **Scraper** (requests + BeautifulSoup4): coleta nome, preço e disponibilidade; segue a paginação do catálogo (20 produtos por página).
@@ -152,7 +154,7 @@ Painel com histórico **simulado** (banco `demo.db`, criado por `python src/cli.
 
 ## Publicar o painel online (Render)
 
-O painel também pode rodar na internet, em modo **demonstração somente leitura**. O repositório já traz o serviço `rastreador-precos` no `render.yaml` da raiz, que sobe o servidor assim:
+O painel está publicado em https://rastreador-precos-4zyj.onrender.com, em modo **demonstração somente leitura**, e pode rodar assim em qualquer hospedagem. O repositório já traz o serviço `rastreador-precos` no `render.yaml` da raiz, que sobe o servidor assim:
 
 ```bash
 python src/cli.py servir --host 0.0.0.0 --porta $PORT --limite 25 --somente-leitura --demo

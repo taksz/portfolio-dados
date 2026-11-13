@@ -9,6 +9,8 @@
 
 API em Python (FastAPI) que encurta URLs e registra **analytics de cada clique**: quantidade de acessos, visitantes únicos (aproximado), navegador, sistema operacional e origem (referrer) — com uma interface web para encurtar links e um painel de cliques.
 
+**Demonstração ao vivo:** [encurtador-url-amgn.onrender.com](https://encurtador-url-amgn.onrender.com). É uma demonstração pública, com dados simulados e sem senha. No plano grátis do Render a primeira visita pode levar cerca de um minuto (o serviço "dorme" quando ninguém acessa), e os links criados por visitantes somem quando ele reinicia.
+
 ## Funcionalidades
 
 - **Encurtar URL** — gera um código curto em base62 (6 caracteres, ex.: `TTTYrF`).
@@ -161,7 +163,7 @@ A autenticação é HTTP Basic: usuário e senha vão em cada requisição, por 
 
 ## Publicar online (Render)
 
-Para qualquer pessoa usar o encurtador pelo navegador, sem instalar nada, o projeto precisa estar hospedado. O repositório já traz o arquivo `render.yaml` na raiz, que descreve o serviço para o [Render](https://render.com) (plano grátis, roda Python):
+O projeto está publicado em https://encurtador-url-amgn.onrender.com usando este procedimento. Para qualquer pessoa usar o encurtador pelo navegador, sem instalar nada, o projeto precisa estar hospedado. O repositório já traz o arquivo `render.yaml` na raiz, que descreve o serviço para o [Render](https://render.com) (plano grátis, roda Python):
 
 1. Crie uma conta no Render e escolha **New > Blueprint**.
 2. Conecte o repositório `portfolio-dados`. O Render lê o `render.yaml` e propõe o serviço `encurtador-url`.
@@ -199,4 +201,4 @@ pytest tests/ -v
 
 - [x] Autenticação simples para o dashboard (senha por `ENCURTADOR_SENHA`; veja "Senha e links com validade")
 - [x] Expiração/desativação de links
-- [ ] Deploy público (Render/Railway) com link ao vivo no README (o projeto e o `render.yaml` estão prontos; falta criar a conta e o serviço no Render e colar o link aqui)
+- [x] Deploy público no Render, com link ao vivo no README (https://encurtador-url-amgn.onrender.com)

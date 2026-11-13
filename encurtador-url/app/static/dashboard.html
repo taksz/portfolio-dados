@@ -24,8 +24,10 @@
     <section class="cabeca">
       <h1 class="codigo" id="codigo">/</h1>
       <p class="destino-linha" id="destino">Carregando…</p>
+      <p class="situacao" id="situacao"></p>
       <div class="acoes">
         <button class="btn primario" id="copiar" type="button">Copiar link curto</button>
+        <button class="btn" id="alternar" type="button" hidden>Desativar link</button>
         <a class="btn" id="abrir" target="_blank" rel="noopener">Abrir link e contar um clique</a>
       </div>
       <p class="erro" id="erro" role="alert"></p>
@@ -96,6 +98,23 @@ async function carregar() {
     const destino = document.getElementById("destino");
     destino.replaceChildren("Leva para ", el("a", { href: d.url_original, target: "_blank", rel: "noopener", text: d.url_original }));
     document.getElementById("abrir").href = `/${d.codigo}`;
+
+    // Estado do link: selo, validade e o botão com a ação que faz sentido para ele.
+    const situacao = document.getElementById("situacao");
+    const explicacao = {
+      ativo: d.expira_em ? `Funciona até ${formatarData(d.expira_em)}.` : "Funciona e não tem data de expiração.",
+      expirado: `Venceu em ${d.expira_em ? formatarData(d.expira_em) : ""}. Quem abrir o link curto vê um aviso e o clique não é contado.`,
+      desativado: "Desligado manualmente. Quem abrir o link curto vê um aviso e o clique não é contado.",
+    };
+    situacao.replaceChildren(el("span", { class: "selo " + d.status, text: rotuloStatus(d) }), explicacao[d.status]);
+    const acao = acaoDoLink(d);
+    const alternar = document.getElementById("alternar");
+    alternar.hidden = false;
+    alternar.textContent = acao.texto === "Desativar" ? "Desativar link" : acao.texto === "Reativar" ? "Reativar link" : acao.texto;
+    alternar.onclick = async () => {
+      try { await alterarLink(d.codigo, acao.corpo); avisar("Link atualizado"); await carregar(); }
+      catch (e) { avisar(e.message); }
+    };
 
     document.getElementById("n-cliques").textContent = d.total_cliques;
     document.getElementById("n-unicos").textContent = d.visitantes_unicos_aprox;

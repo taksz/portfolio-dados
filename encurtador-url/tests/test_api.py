@@ -101,7 +101,7 @@ def test_demo_na_subida_popula_banco_vazio(tmp_path, monkeypatch):
     monkeypatch.setenv("ENCURTADOR_DEMO", "1")
     with TestClient(main.app) as c:
         codigos = {u["codigo"] for u in c.get("/api/urls").json()}
-    assert codigos == {"demo-docs", "demo-portfolio", "demo-dados"}
+    assert codigos == {"demo-docs", "demo-portfolio", "demo-dados", "demo-expirado", "demo-desativado"}
 
 
 def test_demo_na_subida_nao_mexe_em_banco_com_links(tmp_path, monkeypatch):

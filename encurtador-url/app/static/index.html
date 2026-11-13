@@ -27,6 +27,12 @@
       <form class="form-encurtar" id="form" novalidate>
         <input class="campo" id="url" type="url" inputmode="url" autocomplete="off"
                placeholder="https://exemplo.com/um-endereco-bem-longo" aria-label="URL para encurtar" required />
+        <select class="campo seletor" id="validade-escolha" aria-label="Validade do link">
+          <option value="">Sem expiração</option>
+          <option value="1">Expira em 1 dia</option>
+          <option value="7">Expira em 7 dias</option>
+          <option value="30">Expira em 30 dias</option>
+        </select>
         <button class="btn primario" id="enviar" type="submit">Encurtar link</button>
       </form>
       <p class="erro" id="erro" role="alert"></p>
@@ -35,6 +41,7 @@
         <p class="longa" id="longa"></p>
         <p class="rotulo">Seu link curto</p>
         <p class="curta" id="curta"></p>
+        <p class="suave validade" id="validade"></p>
         <div class="acoes">
           <button class="btn primario" id="copiar" type="button">Copiar link</button>
           <a class="btn" id="abrir" target="_blank" rel="noopener">Abrir link</a>
@@ -73,12 +80,26 @@ async function carregarLinks() {
     return;
   }
   for (const u of urls) {
+    const acao = acaoDoLink(u);
+    const botaoAcao = el("button", { class: "mini", type: "button", text: acao.texto });
+    botaoAcao.addEventListener("click", async () => {
+      try {
+        await alterarLink(u.codigo, acao.corpo);
+        avisar("Link atualizado");
+        await carregarLinks();
+      } catch (e) {
+        avisar(e.message);
+      }
+    });
     caixa.append(
-      el("div", { class: "link-linha" },
+      el("div", { class: "link-linha " + u.status },
         el("a", { class: "cod", href: `/dashboard/${u.codigo}`, text: `/${u.codigo}` }),
         el("span", { class: "destino", title: u.url_original, text: u.url_original }),
+        el("span", { class: "selo " + u.status, text: rotuloStatus(u) }),
         el("span", { class: "cliques" }, String(u.total_cliques), el("small", { text: u.total_cliques === 1 ? " clique" : " cliques" })),
-        el("a", { class: "ver", href: `/dashboard/${u.codigo}`, text: "Ver painel" })
+        el("span", { class: "acoes-linha" },
+          el("a", { class: "ver", href: `/dashboard/${u.codigo}`, text: "Ver painel" }),
+          botaoAcao)
       )
     );
   }
@@ -88,13 +109,14 @@ form.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   erro.textContent = "";
   const url = campo.value.trim();
+  const dias = document.getElementById("validade-escolha").value;
   if (!url) { erro.textContent = "Cole uma URL para encurtar."; campo.focus(); return; }
   botao.disabled = true;
   try {
     const resp = await fetch("/api/shorten", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify(dias ? { url, expira_em_dias: Number(dias) } : { url }),
     });
     const dados = await resp.json();
     if (!resp.ok) {
@@ -106,6 +128,9 @@ form.addEventListener("submit", async (ev) => {
     document.getElementById("abrir").href = dados.url_curta;
     document.getElementById("painel").href = `/dashboard/${dados.codigo}`;
     document.getElementById("longa").textContent = url;
+    document.getElementById("validade").textContent = dados.expira_em
+      ? `Vale até ${formatarData(dados.expira_em)}. Depois disso o link deixa de funcionar.`
+      : "Sem data de expiração.";
     const caixa = document.getElementById("resultado");
     caixa.hidden = false;
     caixa.classList.remove("animar");

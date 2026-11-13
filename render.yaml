@@ -8,11 +8,13 @@ services:
     rootDir: encurtador-url
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /api/urls
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.10
       # Demonstração: o disco do plano grátis é apagado a cada reinício, então o
       # site recria links com cliques SIMULADOS quando o banco estiver vazio.
+      # Sem ENCURTADOR_SENHA o app fica aberto (demonstração pública com dados simulados).
+      # Para uso real, adicione ENCURTADOR_SENHA em Environment no painel do Render.
       - key: ENCURTADOR_DEMO
         value: "1"

@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS urls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     codigo TEXT UNIQUE NOT NULL,
     url_original TEXT NOT NULL,
-    criado_em TEXT NOT NULL
+    criado_em TEXT NOT NULL,
+    expira_em TEXT,
+    ativo INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS cliques (
@@ -47,7 +49,46 @@ def conectar(caminho_db: str) -> sqlite3.Connection:
 
 def inicializar_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    _migrar_urls(conn)
     conn.commit()
+
+
+def _migrar_urls(conn: sqlite3.Connection) -> None:
+    """Bancos criados antes da expiração/desativação não têm as colunas novas: acrescenta."""
+    colunas = {linha["name"] for linha in conn.execute("PRAGMA table_info(urls)").fetchall()}
+    if "expira_em" not in colunas:
+        conn.execute("ALTER TABLE urls ADD COLUMN expira_em TEXT")
+    if "ativo" not in colunas:
+        conn.execute("ALTER TABLE urls ADD COLUMN ativo INTEGER NOT NULL DEFAULT 1")
+
+
+def status_url(url, agora: Optional[datetime] = None) -> str:
+    """'ativo', 'desativado' (desligado à mão) ou 'expirado' (passou da data de expiração).
+
+    Desativado tem prioridade: um link desligado fica desligado mesmo antes de expirar.
+    """
+    if not url["ativo"]:
+        return "desativado"
+    if url["expira_em"]:
+        agora = agora or datetime.now(timezone.utc)
+        if datetime.fromisoformat(url["expira_em"]) <= agora:
+            return "expirado"
+    return "ativo"
+
+
+def definir_ativo(conn: sqlite3.Connection, codigo: str, ativo: bool) -> bool:
+    """Liga ou desliga um link. Devolve False se o código não existe."""
+    cur = conn.execute("UPDATE urls SET ativo = ? WHERE codigo = ?", (1 if ativo else 0, codigo))
+    conn.commit()
+    return cur.rowcount > 0
+
+
+def definir_expiracao(conn: sqlite3.Connection, codigo: str, expira_em: Optional[datetime]) -> bool:
+    """Muda a data de expiração (None = nunca expira). Devolve False se o código não existe."""
+    valor = expira_em.isoformat() if expira_em else None
+    cur = conn.execute("UPDATE urls SET expira_em = ? WHERE codigo = ?", (valor, codigo))
+    conn.commit()
+    return cur.rowcount > 0
 
 
 def hash_ip(ip: str) -> str:
@@ -59,8 +100,10 @@ def hash_ip(ip: str) -> str:
     return hashlib.sha256(ip.encode("utf-8")).hexdigest()
 
 
-def criar_url_curta(conn: sqlite3.Connection, url_original: str) -> str:
+def criar_url_curta(conn: sqlite3.Connection, url_original: str, expira_em: Optional[datetime] = None) -> str:
     """Cria uma URL curta para `url_original` e retorna o código gerado.
+
+    `expira_em` (opcional) é o momento a partir do qual o link deixa de funcionar.
 
     Gera um código e tenta inserir; em caso de colisão (código já
     existente — extremamente raro com 6 caracteres em base62), tenta
@@ -70,8 +113,8 @@ def criar_url_curta(conn: sqlite3.Connection, url_original: str) -> str:
         codigo = gerar_codigo()
         try:
             conn.execute(
-                "INSERT INTO urls (codigo, url_original, criado_em) VALUES (?, ?, ?)",
-                (codigo, url_original, datetime.now(timezone.utc).isoformat()),
+                "INSERT INTO urls (codigo, url_original, criado_em, expira_em) VALUES (?, ?, ?, ?)",
+                (codigo, url_original, datetime.now(timezone.utc).isoformat(), expira_em.isoformat() if expira_em else None),
             )
             conn.commit()
             return codigo
@@ -149,6 +192,9 @@ def obter_estatisticas(conn: sqlite3.Connection, codigo: str) -> Optional[Dict]:
         "codigo": url["codigo"],
         "url_original": url["url_original"],
         "criado_em": url["criado_em"],
+        "expira_em": url["expira_em"],
+        "ativo": bool(url["ativo"]),
+        "status": status_url(url),
         "total_cliques": total_cliques,
         "visitantes_unicos_aprox": visitantes_unicos,
         "cliques_por_dia": [dict(r) for r in cliques_por_dia],
@@ -165,5 +211,5 @@ def listar_urls(conn: sqlite3.Connection) -> List[Dict]:
         total = conn.execute(
             "SELECT COUNT(*) AS n FROM cliques WHERE url_id = ?", (u["id"],)
         ).fetchone()["n"]
-        resultado.append({**dict(u), "total_cliques": total})
+        resultado.append({**dict(u), "ativo": bool(u["ativo"]), "status": status_url(u), "total_cliques": total})
     return resultado

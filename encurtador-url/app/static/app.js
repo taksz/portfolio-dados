@@ -113,3 +113,27 @@ function listaBarras(container, dados, chaveRotulo, vazio) {
     );
   }
 }
+
+// ---- Status dos links (ativo, expirado, desativado) ------------------------------------
+function rotuloStatus(u) {
+  if (u.status === "expirado") return "Expirado";
+  if (u.status === "desativado") return "Desativado";
+  return u.expira_em ? `Expira em ${formatarData(u.expira_em)}` : "Ativo";
+}
+
+// Ação principal de cada status: desativar um link ativo, reativar um desligado, renovar um vencido.
+function acaoDoLink(u) {
+  if (u.status === "desativado") return { texto: "Reativar", corpo: { ativo: true } };
+  if (u.status === "expirado") return { texto: "Renovar por 30 dias", corpo: { expira_em_dias: 30 } };
+  return { texto: "Desativar", corpo: { ativo: false } };
+}
+
+async function alterarLink(codigo, corpo) {
+  const resp = await fetch(`/api/urls/${encodeURIComponent(codigo)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+  if (!resp.ok) throw new Error("Não foi possível alterar o link.");
+  return resp.json();
+}

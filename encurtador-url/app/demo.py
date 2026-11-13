@@ -23,7 +23,15 @@ LINKS = [
     ("demo-docs", "https://docs.python.org/3/tutorial/", 1.0),
     ("demo-portfolio", "https://github.com/taksz/portfolio-dados", 0.6),
     ("demo-dados", "https://pandas.pydata.org/docs/", 0.35),
+    ("demo-expirado", "https://www.python.org/downloads/", 0.5),
+    ("demo-desativado", "https://numpy.org/doc/stable/", 0.4),
 ]
+# Estados de exemplo: expira_dias < 0 = já expirou há N dias; ativo 0 = desligado à mão.
+EXTRAS = {
+    "demo-docs": {"expira_dias": 20},
+    "demo-expirado": {"expira_dias": -3},
+    "demo-desativado": {"ativo": 0},
+}
 NAVEGADORES = [("Chrome", 6), ("Firefox", 2), ("Safari", 3), ("Edge", 2), ("Outro", 1)]
 SISTEMAS = [("Windows", 5), ("Android", 4), ("macOS", 2), ("iOS", 3), ("Linux", 1)]
 ORIGENS = [
@@ -59,9 +67,11 @@ def popular(conn, semente: int = 7, agora: datetime | None = None) -> int:
     total = 0
     for codigo, destino, peso in LINKS:
         criado = agora - timedelta(days=DIAS)
+        extra = EXTRAS.get(codigo, {})
+        expira = agora + timedelta(days=extra["expira_dias"]) if "expira_dias" in extra else None
         cur = conn.execute(
-            "INSERT INTO urls (codigo, url_original, criado_em) VALUES (?, ?, ?)",
-            (codigo, destino, criado.isoformat()),
+            "INSERT INTO urls (codigo, url_original, criado_em, expira_em, ativo) VALUES (?, ?, ?, ?, ?)",
+            (codigo, destino, criado.isoformat(), expira.isoformat() if expira else None, extra.get("ativo", 1)),
         )
         url_id = cur.lastrowid
         visitantes = [hashlib.sha256(f"{codigo}-{i}".encode()).hexdigest() for i in range(int(40 * peso) + 5)]
@@ -71,6 +81,8 @@ def popular(conn, semente: int = 7, agora: datetime | None = None) -> int:
             n = max(0, int(rng.gauss(base * peso, 2)))
             for _ in range(n):
                 momento = agora - timedelta(days=DIAS - 1 - dia, hours=rng.randint(0, 23), minutes=rng.randint(0, 59))
+                if expira and momento > expira:
+                    continue  # depois de expirar, o link não recebe mais cliques
                 conn.execute(
                     "INSERT INTO cliques (url_id, clicado_em, referrer, navegador, sistema_operacional, ip_hash) "
                     "VALUES (?, ?, ?, ?, ?, ?)",

@@ -14,7 +14,7 @@ def test_popular_cria_links_e_cliques(tmp_path):
     total = demo.popular(conn, agora=datetime(2026, 1, 15, tzinfo=timezone.utc))
     assert total > 50
     urls = models.listar_urls(conn)
-    assert {u["codigo"] for u in urls} == {"demo-docs", "demo-portfolio", "demo-dados"}
+    assert {u["codigo"] for u in urls} == {"demo-docs", "demo-portfolio", "demo-dados", "demo-expirado", "demo-desativado"}
     assert sum(u["total_cliques"] for u in urls) == total
 
 
@@ -38,5 +38,5 @@ def test_limpar_remove_so_links_demo(tmp_path):
     conn = conn_temporaria(tmp_path)
     models.criar_url_curta(conn, "https://exemplo.com")
     demo.popular(conn)
-    assert demo.limpar(conn) == 3
+    assert demo.limpar(conn) == 5
     assert [u["url_original"] for u in models.listar_urls(conn)] == ["https://exemplo.com"]

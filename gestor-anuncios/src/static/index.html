@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestor de anúncios</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='7' width='30' height='18' rx='3' fill='%23fff' stroke='%231f2328' stroke-width='2'/%3E%3Crect x='2' y='8' width='28' height='5' fill='%23003399'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-titulo">
+      <h1>Estoque anunciado</h1>
+      <p class="topo-meta">
+        <span id="ultima-coleta">Carregando…</span>
+        <span id="etiqueta-demo" class="etiqueta-demo" hidden>Dados simulados</span>
+      </p>
+    </div>
+    <div class="topo-acoes">
+      <button id="coletar" class="botao" type="button">Coletar agora</button>
+      <button id="tema" class="botao botao-discreto" type="button" aria-label="Alternar tema">Tema: automático</button>
+    </div>
+  </header>
+
+  <nav class="placar" id="placar" aria-label="Filtrar por situação"></nav>
+  <p class="placar-resumo" id="placar-resumo"></p>
+
+  <section class="filtros" aria-label="Filtros">
+    <label>Plataforma
+      <select id="filtro-plataforma"><option value="">Todas</option></select>
+    </label>
+    <label>Marca
+      <select id="filtro-marca"><option value="">Todas</option></select>
+    </label>
+    <label class="filtro-busca">Buscar
+      <input id="filtro-q" type="search" placeholder="Placa ou modelo" maxlength="60" autocomplete="off">
+    </label>
+    <span class="filtros-total" id="filtros-total" aria-live="polite"></span>
+  </section>
+
+  <main class="area">
+    <section class="lista">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th scope="col">Veículo</th>
+            <th scope="col" class="num">Preço</th>
+            <th scope="col" class="num">Dias</th>
+            <th scope="col" class="num">Contatos 7 dias</th>
+            <th scope="col">Situação</th>
+          </tr>
+        </thead>
+        <tbody id="linhas"></tbody>
+      </table>
+      <p class="vazio" id="vazio" hidden></p>
+    </section>
+
+    <aside class="detalhe" id="detalhe" aria-live="polite">
+      <p class="detalhe-dica">Escolha um veículo na tabela para ver o histórico de preço e contatos.</p>
+    </aside>
+  </main>
+
+  <section class="alertas">
+    <details id="alertas">
+      <summary>Alertas recentes</summary>
+      <ol id="lista-alertas"></ol>
+    </details>
+  </section>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

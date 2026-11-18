@@ -18,6 +18,8 @@ MVP de um sistema de **gestão de anúncios de veículos** para lojas e revendas
 
 Para os parados e caros, o sistema sugere um preço novo.
 
+**Demonstração ao vivo do painel:** [gestor-anuncios-6xy4.onrender.com](https://gestor-anuncios-6xy4.onrender.com). É uma demonstração pública, somente leitura, com 8 semanas de coletas **simuladas** de 40 carros fictícios: o botão de coleta e a coleta automática ficam desligados na nuvem. No plano grátis do Render a primeira visita pode levar cerca de um minuto (o serviço "dorme" quando ninguém acessa).
+
 > **Ainda não há integração com plataformas reais.** A coleta passa por uma interface de adaptadores (veja [Plugando uma plataforma real](#plugando-uma-plataforma-real)), e o projeto vem com um adaptador de **demonstração** que gera anúncios **simulados**: 40 carros fictícios em 3 plataformas fictícias (AutoFeira, CarroJá e Vitrine Motors), com placas e valores de referência inventados.
 
 ## Funcionalidades
@@ -139,7 +141,7 @@ Tema escuro, com um carro vendido na CarroJá que continua anunciado na AutoFeir
 
 ## Publicar o painel online (Render)
 
-O repositório já traz o serviço `gestor-anuncios` no `render.yaml` da raiz, em modo **demonstração somente leitura**. O Render sobe o servidor assim:
+O painel está publicado em https://gestor-anuncios-6xy4.onrender.com, em modo **demonstração somente leitura**. O repositório já traz o serviço `gestor-anuncios` no `render.yaml` da raiz, e o Render sobe o servidor assim:
 
 ```bash
 python src/cli.py servir --host 0.0.0.0 --porta $PORT --somente-leitura --demo
@@ -153,7 +155,7 @@ python src/cli.py servir --host 0.0.0.0 --porta $PORT --somente-leitura --demo
 
 O plano grátis do Render apaga o disco a cada reinício, por isso a demonstração recria os dados simulados quando sobe. A coleta automática não roda na nuvem, porque um serviço grátis "dorme" quando ninguém acessa, e a primeira visita depois disso pode levar cerca de um minuto. O servidor responde `GET /healthz` (público, sem dados), que o Render usa para saber se o app está de pé.
 
-Para publicar, o procedimento é o mesmo dos outros projetos: no Render, **New > Blueprint**, escolha o repositório `portfolio-dados` e confirme o serviço `gestor-anuncios`. O endereço fica no formato `https://gestor-anuncios-xxxx.onrender.com`. A coleta, o agendador e o botão **Coletar agora** continuam funcionando quando o projeto roda na sua máquina.
+Para publicar, o procedimento é o mesmo dos outros projetos: no Render, **New > Blueprint** com o repositório `portfolio-dados`. Se o Blueprint já existir, basta dar push no `render.yaml`, que ele sincroniza sozinho (ou use **Manual Sync**). A coleta, o agendador e o botão **Coletar agora** continuam funcionando quando o projeto roda na sua máquina.
 
 ### API
 

@@ -8,6 +8,7 @@ Rodar localmente (a partir da pasta analise-vendas):
     streamlit run dashboard/app.py
 """
 
+import math
 import sys
 from pathlib import Path
 
@@ -29,6 +30,16 @@ COR_ANO = {2023: LARANJA, 2024: AZUL}
 COR_CANAL = {"Online": AZUL, "Loja Física": LARANJA}
 
 st.set_page_config(page_title="Dashboard comercial", page_icon="📊", layout="wide")
+
+# Cartões: o valor diminui de tamanho em telas estreitas e o título pode quebrar
+# linha, em vez de serem cortados com "..."
+st.markdown("""
+<style>
+[data-testid="stMetricValue"] { font-size: clamp(1.35rem, 2.4vw, 2.25rem); }
+[data-testid="stMetricValue"] > div { overflow: visible; text-overflow: clip; }
+[data-testid="stMetricLabel"] p { white-space: normal; }
+</style>
+""", unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------
@@ -85,10 +96,33 @@ def estilizar(fig: go.Figure, altura: int = 360) -> go.Figure:
     return fig
 
 
+def passo_redondo(valor: float) -> float:
+    """Arredonda para cima até um número 'redondo' (1, 2 ou 5 vezes uma potência de 10)."""
+    potencia = 10 ** math.floor(math.log10(valor))
+    return next(m * potencia for m in (1, 2, 5, 10) if m * potencia >= valor)
+
+
+def texto_barra(valor: float) -> str:
+    """Valor escrito na ponta da barra: 'R$ 2,18 mi', 'R$ 565 mil' ou 'R$ 1.644'."""
+    if valor >= 1_000_000:
+        return f"R$ {numero_br(valor / 1_000_000)} mi"
+    if valor >= 10_000:
+        return f"R$ {numero_br(valor / 1_000, 0)} mil"
+    return f"R$ {numero_br(valor, 0)}"
+
+
 def eixo_x_barras(fig: go.Figure, maximo: float) -> None:
-    """Eixo de valores das barras horizontais: poucos rótulos e folga para o texto de % à direita."""
-    fig.update_xaxes(tickprefix="R$ ", tickformat=",.0f", nticks=4, tickangle=0,
-                     showgrid=True, gridcolor="#eeede9", range=[0, maximo * 1.2])
+    """Eixo de valores das barras horizontais.
+
+    Todas as barras horizontais trazem o valor escrito na ponta, então os números
+    do eixo seriam redundantes (e se sobrepõem em tela estreita): ficam só as
+    linhas de grade, em marcas redondas, e uma folga à direita para o texto.
+    """
+    passo = passo_redondo(maximo / 4)
+    folga = 1.3
+    marcas = [passo * i for i in range(6) if passo * i <= maximo * folga]
+    fig.update_xaxes(tickvals=marcas, showticklabels=False, showgrid=True, gridcolor="#eeede9",
+                     range=[0, maximo * folga])
 
 
 def mostrar(fig: go.Figure) -> None:
@@ -151,10 +185,10 @@ with aba_geral:
     por_categoria = metricas.receita_por(df, "categoria").sort_values("receita")
     fig = go.Figure(go.Bar(
         x=por_categoria["receita"], y=por_categoria.index, orientation="h", marker_color=AZUL,
-        text=[percentual(p) for p in por_categoria["pct_receita"]], textposition="outside",
+        text=[percentual(p) for p in por_categoria["pct_receita"]], textposition="auto", insidetextanchor="end",
         cliponaxis=False, customdata=por_categoria["vendas"],
         hovertemplate="%{y}<br>R$ %{x:,.2f} · %{customdata} vendas<extra></extra>"))
-    fig.update_layout(title="Receita por categoria (% do total)")
+    fig.update_layout(title="% da receita por categoria")
     eixo_x_barras(fig, por_categoria["receita"].max())
     with col_b:
         mostrar(estilizar(fig))
@@ -169,10 +203,12 @@ with aba_produtos:
     col_a, col_b = st.columns(2)
 
     top = metricas.top_produtos(df, 10).iloc[::-1]
+    # Só o nome do produto no eixo (cabe em tela estreita); a categoria aparece ao passar o mouse
     fig = go.Figure(go.Bar(
-        x=top["receita"], y=top["produto"] + " (" + top["categoria"] + ")", orientation="h",
-        marker_color=AZUL, customdata=top["vendas"],
-        hovertemplate="%{y}<br>R$ %{x:,.2f} · %{customdata} vendas<extra></extra>"))
+        x=top["receita"], y=top["produto"], orientation="h", marker_color=AZUL,
+        text=[texto_barra(v) for v in top["receita"]], textposition="auto", insidetextanchor="end", cliponaxis=False,
+        customdata=np.stack([top["categoria"], top["vendas"]], axis=-1),
+        hovertemplate="%{y} (%{customdata[0]})<br>R$ %{x:,.2f} · %{customdata[1]} vendas<extra></extra>"))
     fig.update_layout(title="Top 10 produtos por receita")
     eixo_x_barras(fig, top["receita"].max())
     with col_a:
@@ -183,6 +219,7 @@ with aba_produtos:
     tabela_ticket = tabela_cat.sort_values("ticket_medio")
     fig = go.Figure(go.Bar(
         x=tabela_ticket["ticket_medio"], y=tabela_ticket.index, orientation="h", marker_color=AZUL,
+        text=[texto_barra(v) for v in tabela_ticket["ticket_medio"]], textposition="auto", insidetextanchor="end", cliponaxis=False,
         hovertemplate="%{y}<br>Ticket médio: R$ %{x:,.2f}<extra></extra>"))
     fig.update_layout(title="Ticket médio por categoria")
     eixo_x_barras(fig, tabela_ticket["ticket_medio"].max())
@@ -207,10 +244,10 @@ with aba_regioes:
     por_regiao = metricas.receita_por(df, "regiao").sort_values("receita")
     fig = go.Figure(go.Bar(
         x=por_regiao["receita"], y=por_regiao.index, orientation="h", marker_color=AZUL,
-        text=[percentual(p) for p in por_regiao["pct_receita"]], textposition="outside", cliponaxis=False,
+        text=[percentual(p) for p in por_regiao["pct_receita"]], textposition="auto", insidetextanchor="end", cliponaxis=False,
         customdata=np.stack([por_regiao["vendas"], por_regiao["ticket_medio"]], axis=-1),
         hovertemplate="%{y}<br>R$ %{x:,.2f}<br>%{customdata[0]} vendas · ticket R$ %{customdata[1]:,.2f}<extra></extra>"))
-    fig.update_layout(title="Receita por região (% do total)")
+    fig.update_layout(title="% da receita por região")
     eixo_x_barras(fig, por_regiao["receita"].max())
     with col_a:
         mostrar(estilizar(fig))

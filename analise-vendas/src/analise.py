@@ -3,7 +3,7 @@ Análise exploratória dos dados de vendas com pandas + matplotlib.
 
 Lê data/vendas.csv, calcula métricas de negócio e salva os gráficos em
 imgs/. Também imprime um resumo no terminal, que é a fonte dos números
-citados no relatorio.md deste projeto (nenhum número é inventado — todos
+citados no README deste projeto (nenhum número é inventado — todos
 vêm da execução deste script sobre os dados gerados por gerar_dados.py).
 
 Uso:

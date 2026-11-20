@@ -5,3 +5,6 @@ __pycache__/
 data/powerbi/
 # Cache local do Power BI Desktop (criado ao abrir o projeto .pbip)
 powerbi/**/.pbi/
+
+# Checkpoints do Jupyter
+.ipynb_checkpoints/

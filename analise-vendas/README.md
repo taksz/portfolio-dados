@@ -11,6 +11,34 @@ Projeto de análise de dados de ponta a ponta: geração de um dataset sintétic
 
 > **Por que dados sintéticos?** Para um projeto público, gerar os próprios dados (com seed fixa, em `src/gerar_dados.py`) evita problemas de licença/privacidade de datasets de terceiros e permite controlar os padrões (crescimento do canal online e sazonalidade de fim de ano). A sazonalidade mensal é **calibrada com dados reais do IBGE** (veja "Versão com dados reais"); o restante (preços, regiões, categorias) é sintético.
 
+📓 **Notebook de análise exploratória:** [`notebooks/analise_exploratoria.ipynb`](notebooks/analise_exploratoria.ipynb) (salvo com as saídas, dá para ler direto no GitHub).
+
+## Problema
+
+Um e-commerce fictício que vende em 5 categorias, nas 5 regiões do Brasil e por dois canais (Online e Loja Física) quer responder:
+
+1. **Como as vendas evoluíram** em 2023 e 2024, e o crescimento veio de mais vendas ou de vendas mais caras?
+2. **Quais categorias e produtos** sustentam a receita?
+3. **Onde e por qual canal** a receita acontece?
+4. **Quão forte é o fim de ano** (Black Friday e Natal)?
+
+As respostas orientam estoque, marketing e metas, e são acompanhadas em um dashboard no Power BI.
+
+## Origem dos dados
+
+- **Vendas: sintéticas.** 6.655 vendas fictícias (jan/2023 a dez/2024) geradas por `src/gerar_dados.py` com semente fixa: rodar de novo produz exatamente o mesmo arquivo. Colunas: `id_venda`, `data`, `categoria`, `produto`, `quantidade`, `preco_unitario`, `receita`, `regiao`, `canal`. **Nenhum número deste projeto descreve uma empresa real.**
+- **Sazonalidade: real.** Os fatores mensais do gerador vêm da Pesquisa Mensal de Comércio do IBGE (API SIDRA, tabela 8880), baixada por `src/analise_ibge.py`.
+
+## Metodologia
+
+1. **Geração e carga.** O gerador cria as vendas com regras explícitas (catálogo e faixa de preço por categoria, pesos por região, crescimento do canal Online, sazonalidade do IBGE). `src/carregar_sqlite.py` grava o CSV na tabela `vendas` de um banco SQLite.
+2. **Conferência de qualidade.** No notebook, antes de analisar: ausência de nulos e duplicatas, IDs únicos, `receita = quantidade × preço` em todas as linhas, valores positivos e os 24 meses presentes.
+3. **Consultas SQL.** `sql/consultas.sql` responde às perguntas de negócio com agregações, subconsulta para participação percentual e função de janela (`RANK() OVER (PARTITION BY ...)`).
+4. **Análise exploratória com pandas.** O notebook olha evolução mensal e anual, separa o crescimento em **volume** (número de vendas) e **preço** (ticket médio), compara categorias, produtos, regiões e canais e mede a sazonalidade. As métricas principais vêm de `calcular_metricas()` em `src/analise.py`, a mesma função coberta pelos testes.
+5. **Conferência SQL × pandas.** O notebook roda a mesma pergunta nas duas ferramentas e verifica que os resultados são idênticos.
+6. **Dashboard.** Os dados são exportados em modelo estrela para o Power BI, com 12 medidas DAX e 3 páginas de indicadores.
+7. **Validação com dado real.** A sazonalidade suposta foi confrontada com o IBGE e o gerador foi recalibrado (seção "Versão com dados reais").
+
 ## Estrutura
 
 ```
@@ -22,6 +50,8 @@ analise-vendas/
 │   ├── analise_ibge.py     # Versão com dados REAIS: PMC/IBGE (API SIDRA) x dados sintéticos
 │   ├── exportar_powerbi.py # Modelo estrela em CSV para o Power BI (data/powerbi/)
 │   └── gerar_projeto_pbip.py # Gera o projeto do Power BI (powerbi/AnaliseVendas.pbip)
+├── notebooks/
+│   └── analise_exploratoria.ipynb # Análise exploratória completa, com texto, gráficos e conclusões
 ├── sql/
 │   └── consultas.sql       # 8 consultas de negócio comentadas
 ├── powerbi/                # Projeto Power BI (.pbip), medidas DAX, scripts M/TMDL e roteiro
@@ -43,7 +73,11 @@ python src/exportar_powerbi.py  # gera os CSVs do modelo estrela para o Power BI
 python src/gerar_projeto_pbip.py # gera o projeto do dashboard (abra o .pbip no Power BI Desktop)
 
 pytest tests/ -v                # 59 testes (sem internet)
+
+jupyter notebook notebooks/analise_exploratoria.ipynb   # abre a análise exploratória
 ```
+
+O notebook gera `data/vendas.csv` e `data/vendas.db` sozinho se eles ainda não existirem.
 
 As consultas de `sql/consultas.sql` podem ser rodadas com qualquer cliente SQLite sobre `data/vendas.db`.
 
@@ -52,7 +86,7 @@ As consultas de `sql/consultas.sql` podem ser rodadas com qualquer cliente SQLit
 *(números reais, gerados pela execução de `src/analise.py` sobre os dados sintéticos de `src/gerar_dados.py`)*
 
 - **Receita total (2023-2024): R$ 4.429.491,93**, em 6.655 vendas.
-- **Crescimento ano a ano de 19,8%**: de R$ 2.014.881,46 em 2023 para R$ 2.414.610,47 em 2024.
+- **Crescimento ano a ano de 19,8%**: de R$ 2.014.881,46 em 2023 para R$ 2.414.610,47 em 2024. O crescimento veio principalmente de **volume**: o número de vendas subiu 16,4% e o ticket médio só 2,9%.
 - **Eletrônicos é a categoria líder**, respondendo por **49,2%** de toda a receita — bem à frente de Esporte (32,9%).
 - **Sudeste concentra 46,1%** da receita, seguido por Nordeste (22,4%) e Sul (17,3%) — reflexo dos pesos populacionais usados na geração dos dados.
 - **O fim de ano vende mais, mas de forma moderada**: a receita média mensal em novembro/dezembro (R$ 222.207,11) é **1,26x maior** que nos demais meses (R$ 177.033,17), e **dezembro é o mês mais forte nos dois anos**. A calibração com o IBGE aponta 1,19x; o valor medido é um pouco maior porque a receita também cresce de 2023 para 2024, e novembro/dezembro ficam no fim de cada ano.
@@ -155,8 +189,18 @@ Nota sobre o crescimento: a medida compara o último ano no contexto de filtros 
 - scripts do Power BI (M, TMDL e DAX): nomes de colunas, relacionamentos e medidas consistentes com o modelo exportado
 - gerador do projeto Power BI: JSON válidos, todo campo usado nos visuais existe no modelo, medidas iguais às do `medidas.dax` e saída determinística
 
+## Limitações
+
+- **Dados sintéticos.** Os padrões encontrados (crescimento do Online, peso do Sudeste, liderança de Eletrônicos) são, em boa parte, consequência das regras do gerador. A análise demonstra o **método**, não descobre fatos sobre um negócio real.
+- **Preço por categoria, não por produto.** Todos os produtos de uma categoria sorteiam o preço na mesma faixa (um carregador pode custar tanto quanto um smartphone). Por isso o ranking de produtos dentro de uma categoria não tem significado de negócio.
+- **Frequência quase igual entre categorias.** As categorias vendem praticamente o mesmo número de vezes; num e-commerce real, livros e acessórios costumam vender com muito mais frequência que eletrônicos caros.
+- **Faltam variáveis importantes.** Não há custo, margem, desconto, frete, devoluções nem identificação de clientes, então não é possível analisar lucro, recompra ou comportamento por cliente.
+- **Apenas dois anos.** Com 24 meses, a sazonalidade e o crescimento ficam sujeitos a variação aleatória (por exemplo, abril aparece levemente abaixo de fevereiro, embora o fator do IBGE aponte fevereiro como o mês mais fraco).
+- **Sazonalidade nacional.** Os fatores do IBGE são do varejo brasileiro como um todo; não há diferença sazonal por região ou categoria.
+
 ## Próximos passos
 
 - [x] Dashboard interativo em Power BI (projeto `.pbip` em `powerbi/`, com capturas; veja "Dashboard no Power BI")
 - [x] Versão com dados reais de uma API pública (IBGE/PMC, veja "Versão com dados reais")
 - [x] Recalibrar o gerador sintético com a sazonalidade real do IBGE (veja "Recalibração do gerador")
+- [x] Notebook de análise exploratória com conferência SQL × pandas (`notebooks/analise_exploratoria.ipynb`)

@@ -1,7 +1,22 @@
 # Blueprint do Render (https://render.com) para publicar os projetos web do repositório:
-# encurtador-url, rastreador-precos e gestor-anuncios (painéis em modo demonstração, somente leitura).
+# encurtador-url, rastreador-precos e gestor-anuncios (painéis em modo demonstração, somente leitura)
+# e o dashboard comercial do analise-vendas (Streamlit).
 # O repositório é um monorepo: rootDir aponta para a pasta do projeto.
 services:
+  - type: web
+    name: dashboard-vendas
+    runtime: python
+    plan: free
+    rootDir: analise-vendas
+    # Só as dependências do painel (pandas, numpy, plotly, streamlit). A base de vendas
+    # é sintética e reprodutível (mesma semente), então o app a gera em memória ao iniciar.
+    buildCommand: pip install -r requirements-dashboard.txt
+    startCommand: streamlit run dashboard/app.py --server.port $PORT --server.address 0.0.0.0
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+
   - type: web
     name: encurtador-url
     runtime: python

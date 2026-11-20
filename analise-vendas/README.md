@@ -36,7 +36,7 @@ As respostas orientam estoque, marketing e metas, e são acompanhadas em um dash
 3. **Consultas SQL.** `sql/consultas.sql` responde às perguntas de negócio com agregações, subconsulta para participação percentual e função de janela (`RANK() OVER (PARTITION BY ...)`).
 4. **Análise exploratória com pandas.** O notebook olha evolução mensal e anual, separa o crescimento em **volume** (número de vendas) e **preço** (ticket médio), compara categorias, produtos, regiões e canais e mede a sazonalidade. As métricas principais vêm de `calcular_metricas()` em `src/analise.py`, a mesma função coberta pelos testes.
 5. **Conferência SQL × pandas.** O notebook roda a mesma pergunta nas duas ferramentas e verifica que os resultados são idênticos.
-6. **Dashboard.** Os dados são exportados em modelo estrela para o Power BI, com 12 medidas DAX e 3 páginas de indicadores.
+6. **Dashboard.** Os dados são exportados em modelo estrela para o Power BI, com 12 medidas DAX e 3 páginas de indicadores. Uma versão web com os mesmos indicadores (Streamlit + Plotly) fica publicada online.
 7. **Validação com dado real.** A sazonalidade suposta foi confrontada com o IBGE e o gerador foi recalibrado (seção "Versão com dados reais").
 
 ## Estrutura
@@ -54,6 +54,9 @@ analise-vendas/
 │   └── analise_exploratoria.ipynb # Análise exploratória completa, com texto, gráficos e conclusões
 ├── sql/
 │   └── consultas.sql       # 8 consultas de negócio comentadas
+├── dashboard/
+│   ├── app.py              # Dashboard web (Streamlit + Plotly), versão online do Power BI
+│   └── metricas.py         # Cálculos do dashboard web (testados no pytest)
 ├── powerbi/                # Projeto Power BI (.pbip), medidas DAX, scripts M/TMDL e roteiro
 ├── imgs/                   # Gráficos gerados (PNG)
 ├── tests/                  # Testes pytest (dados, métricas, IBGE, exportação)
@@ -72,7 +75,7 @@ python src/analise_ibge.py      # baixa dados reais do IBGE e compara a sazonali
 python src/exportar_powerbi.py  # gera os CSVs do modelo estrela para o Power BI
 python src/gerar_projeto_pbip.py # gera o projeto do dashboard (abra o .pbip no Power BI Desktop)
 
-pytest tests/ -v                # 59 testes (sem internet)
+pytest tests/ -v                # 66 testes (sem internet)
 
 jupyter notebook notebooks/analise_exploratoria.ipynb   # abre a análise exploratória
 ```
@@ -133,6 +136,23 @@ Com base nisso, o gerador (`FATOR_SAZONAL_MES` em `src/gerar_dados.py`) passou a
 
 Como o fator sazonal real é calculado: razão entre o índice original e o índice com ajuste sazonal do próprio IBGE, média por mês do ano, normalizada para média 1. Os testes usam uma amostra real da resposta da API salva em `tests/fixtures/pmc_amostra.json` (sem internet).
 
+## Dashboard web
+
+Versão online do dashboard, com os mesmos indicadores e filtros do Power BI, feita em **Streamlit + Plotly** (`dashboard/app.py`) e publicada no Render (link na seção "Projetos" do README principal do portfólio). Os cálculos ficam em `dashboard/metricas.py`, e um teste garante que os números são os mesmos do relatório e do Power BI.
+
+- **Cartões:** receita, vendas, ticket médio e crescimento sobre o ano anterior.
+- **Abas:** visão geral (receita por mês comparando os anos e por categoria), categorias e produtos (top 10 produtos, ticket médio, tabela com crescimento), regiões e canais (receita por região, Online × Loja Física por ano) e sazonalidade (efeito de alta temporada e receita média por mês do ano).
+- **Filtros** por ano, região, canal e categoria, na barra lateral.
+
+Para rodar localmente:
+
+```bash
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/app.py
+```
+
+O app gera a base sintética em memória se `data/vendas.csv` não existir, então funciona num servidor novo sem nenhum passo extra. No plano gratuito do Render o serviço "dorme" após um tempo sem acesso e leva cerca de um minuto para acordar na primeira visita.
+
 ## Dashboard no Power BI
 
 O dashboard está pronto como **projeto do Power BI (formato PBIP)**, gerado por `src/gerar_projeto_pbip.py`. Ele reúne as 5 tabelas do modelo estrela, os 4 relacionamentos, a tabela de datas, as 12 medidas DAX e 3 páginas de relatório. Foi aberto e conferido no Power BI Desktop: os números batem com os de "Principais achados".
@@ -180,13 +200,14 @@ Nota sobre o crescimento: a medida compara o último ano no contexto de filtros 
 
 ## Testes
 
-59 testes com `pytest` (nenhum depende de internet), cobrindo:
+66 testes com `pytest` (nenhum depende de internet), cobrindo:
 - reprodutibilidade da geração de dados (mesma seed → mesmo resultado)
 - validade dos dados gerados (datas no período, categorias/produtos válidos, receita consistente)
 - corretude dos cálculos de métricas de negócio usados no relatório
 - análise do IBGE: leitura da resposta da API (amostra real salva), fator sazonal, variações anuais e a requisição mockada
 - modelo estrela do Power BI: totais preservados, chaves sem órfãos, calendário contínuo e formatos de CSV
 - scripts do Power BI (M, TMDL e DAX): nomes de colunas, relacionamentos e medidas consistentes com o modelo exportado
+- dashboard web: filtros, indicadores, base vazia e números iguais aos do relatório e do Power BI
 - gerador do projeto Power BI: JSON válidos, todo campo usado nos visuais existe no modelo, medidas iguais às do `medidas.dax` e saída determinística
 
 ## Limitações

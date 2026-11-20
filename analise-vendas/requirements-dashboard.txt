@@ -1,0 +1,6 @@
+# Dependências só do dashboard web (dashboard/app.py), usadas no deploy do Render.
+# Para o projeto completo (análise, testes, notebook), use requirements.txt.
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.22.0
+streamlit>=1.50.0

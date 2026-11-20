@@ -11,7 +11,7 @@ Projeto de análise de dados de ponta a ponta: geração de um dataset sintétic
 
 > **Por que dados sintéticos?** Para um projeto público, gerar os próprios dados (com seed fixa, em `src/gerar_dados.py`) evita problemas de licença/privacidade de datasets de terceiros e permite controlar os padrões (crescimento do canal online e sazonalidade de fim de ano). A sazonalidade mensal é **calibrada com dados reais do IBGE** (veja "Versão com dados reais"); o restante (preços, regiões, categorias) é sintético.
 
-📓 **Notebook de análise exploratória:** [`notebooks/analise_exploratoria.ipynb`](notebooks/analise_exploratoria.ipynb) (salvo com as saídas, dá para ler direto no GitHub).
+🌐 **Dashboard ao vivo:** [dashboard-vendas-vxtp.onrender.com](https://dashboard-vendas-vxtp.onrender.com) · 📓 **Notebook de análise exploratória:** [`notebooks/analise_exploratoria.ipynb`](notebooks/analise_exploratoria.ipynb) (salvo com as saídas, dá para ler direto no GitHub).
 
 ## Problema
 
@@ -138,7 +138,7 @@ Como o fator sazonal real é calculado: razão entre o índice original e o índ
 
 ## Dashboard web
 
-Versão online do dashboard, com os mesmos indicadores e filtros do Power BI, feita em **Streamlit + Plotly** (`dashboard/app.py`) e publicada no Render (link na seção "Projetos" do README principal do portfólio). Os cálculos ficam em `dashboard/metricas.py`, e um teste garante que os números são os mesmos do relatório e do Power BI.
+Versão online do dashboard, com os mesmos indicadores e filtros do Power BI, feita em **Streamlit + Plotly** (`dashboard/app.py`) e publicada no Render: **[dashboard-vendas-vxtp.onrender.com](https://dashboard-vendas-vxtp.onrender.com)**. Os cálculos ficam em `dashboard/metricas.py`, e um teste garante que os números são os mesmos do relatório e do Power BI.
 
 - **Cartões:** receita, vendas, ticket médio e crescimento sobre o ano anterior.
 - **Abas:** visão geral (receita por mês comparando os anos e por categoria), categorias e produtos (top 10 produtos, ticket médio, tabela com crescimento), regiões e canais (receita por região, Online × Loja Física por ano) e sazonalidade (efeito de alta temporada e receita média por mês do ano).
